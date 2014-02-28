@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-from nose.tools import assert_equal, assert_true, assert_almost_equal
+from nose.tools import assert_equal, assert_true, assert_almost_equal, nottest
 from os.path import isdir,isfile
 from os import listdir
 import os
@@ -14,7 +14,6 @@ tmp_dir_path = test_dir_path + '/nose_tmp_output'
 tmp_basename_dir = tmp_dir_path + '/1'
 tmp_basename_dir2 = tmp_dir_path + '/2'
 tmp_basename_file = tmp_dir_path + '/file'
-
 
 CWD = os.getcwd()
 
@@ -44,7 +43,7 @@ class TestCMD(object):
 
     def run_command(self,cov_file='coverage',comp_file='composition.fa',
                     tags=[],basename='nose_tmp_output/1'):
-        call_string = "concoct --coverage_file test_data/{0} --composition_file test_data/{1} --basename {2} -c 3,5,1 --no_total_coverage 2> /dev/null".format(cov_file,comp_file,basename)
+        call_string = "concoct --coverage_file test_data/{0} --composition_file test_data/{1} --basename {2} -c 10 --no_total_coverage 2> /dev/null".format(cov_file,comp_file,basename)
         for tag in tags:
             call_string += " " + tag
         self.c = 0 # Exit code
@@ -54,21 +53,6 @@ class TestCMD(object):
                 shell=True)
         except subprocess.CalledProcessError as exc:
             self.c = exc.returncode
-
-    def run_command_mpi(self,cov_file='coverage',comp_file='composition.fa',
-                    tags=[],basename='nose_tmp_output/1'):
-        call_string = "mpirun -np 8 concoct --coverage_file test_data/{0} --composition_file test_data/{1} --basename {2} -c 3,5,1 --no_total_coverage 2> /dev/null".format(cov_file,comp_file,basename)
-        for tag in tags:
-            call_string += " " + tag
-        self.c = 0 # Exit code
-        try:
-            self.op = subprocess.check_output(
-                call_string,
-                shell=True)
-            print >> sys.stderr, "You have mpi support"
-        except subprocess.CalledProcessError as exc:
-            self.c = exc.returncode
-            print >> sys.stderr, "You do not have mpi support"
 
     def file_len(self,fh):
         i=0
@@ -89,25 +73,16 @@ class TestCMD(object):
         self.run_command()
         assert_equal(self.c,0,
                      msg = "Command exited with nonzero status")
-        run_mpi_test = True
-        try:
-            import mpi4py
-        except ImportError:
-            run_mpi_test = False
-        if run_mpi_test:
-            self.run_command_mpi()
-            assert_equal(self.c,0,
-                         msg = "Command exited with nonzero status")
 
     def test_directory_creation(self):
         self.run_command()
         assert_true(isdir(tmp_basename_dir),
                     msg = "Temporary directory not created")
-        m_time_first = os.path.getmtime(tmp_basename_dir+'/clustering.csv')
+        m_time_first = os.path.getmtime(tmp_basename_dir+'/clustering_gt1000.csv')
         
         # Rerun the concoct and see that the directory is overwritten
         self.run_command()
-        m_time_second = os.path.getmtime(tmp_basename_dir+'/clustering.csv')
+        m_time_second = os.path.getmtime(tmp_basename_dir+'/clustering_gt1000.csv')
         assert_true(m_time_first != m_time_second,
                      msg = "basename dir is not overwritten")
         L = listdir(tmp_dir_path)
@@ -116,20 +91,29 @@ class TestCMD(object):
 
         # File creation
         self.run_command(basename=tmp_basename_file)
-        assert_true(isfile(tmp_basename_file+'_clustering.csv'),
+        assert_true(isfile(tmp_basename_file+'_clustering_gt1000.csv'),
                     msg = "Clustering file is not created, when file is used as basename")
         L = listdir(tmp_basename_dir)
-        assert_true(len(L) == 16,
+        assert_true(len(L) == 28,
                     msg = "Wrong number of output files, observed {0}".format(L))
 
+    def test_prior_to_clustering(self):
+        self.run_command()
+        d_p = os.path.join(tmp_basename_dir)
+        assert_true(isfile(d_p+ '/args.txt'),
+                           msg="Args file is not created")
+        assert_true(isfile(d_p+ '/log.txt'),
+                           msg="Log file is not created")
+        assert_true(isfile(d_p+ '/original_data_gt1000.csv'),
+                           msg="Original data file is not created")
+        assert_true(isfile(d_p+ '/PCA_transformed_data_gt1000.csv'),
+                           msg="PCA transformed data file is not created")
+
+        
     def test_output_files_creation(self):
         # dir as basename
         self.run_command()
         d_p = os.path.join(tmp_basename_dir)
-        assert_true(
-            isfile(d_p+ '/bic.csv'),
-            msg='Bic file is not created'
-            )
         assert_true(
             isfile(d_p+ '/clustering_gt1000.csv'),
             msg='Large contigs clustering file is not created'
@@ -148,16 +132,12 @@ class TestCMD(object):
             )
         
         assert_true(
-            isfile(d_p+ '/variance_gt1000_dim1.csv'),
+            isfile(d_p+ '/variances_gt1000_dim1.csv'),
             msg='Large contigs cluster variance file is not created'
             )
         assert_true(
             isfile(d_p+ '/responsibilities.csv'),
             msg='Large contigs responsibilities file is not created'
-            )
-        assert_true(
-            isfile(d_p+ '/clustering.csv'),
-            msg='Clustering file is not created'
             )
         assert_true(
             isfile(d_p+ '/PCA_transformed_data_gt1000.csv'),
@@ -174,10 +154,6 @@ class TestCMD(object):
         # dir as file
         self.run_command(basename=tmp_basename_file)
         d_p = tmp_basename_file +'_'
-        assert_true(
-            isfile(d_p +'bic.csv'),
-            msg='Bic file is not created'
-            )
         assert_true(
             isfile(d_p+ 'clustering_gt1000.csv'),
             msg='Large contigs clustering file is not created'
@@ -196,16 +172,12 @@ class TestCMD(object):
             )
 
         assert_true(
-            isfile(d_p+ 'variance_gt1000_dim1.csv'),
+            isfile(d_p+ 'variances_gt1000_dim1.csv'),
             msg='Large contigs cluster variance file is not created'
             )
         assert_true(
             isfile(d_p+ 'responsibilities.csv'),
             msg='Large contigs responsibilities file is not created'
-            )
-        assert_true(
-            isfile(d_p+ 'clustering.csv'),
-            msg='Clustering file is not created'
             )
         assert_true(
             isfile(d_p+ 'PCA_transformed_data_gt1000.csv'),
@@ -225,56 +197,21 @@ class TestCMD(object):
         d_p = tmp_basename_dir
         od_1 = d_p+'/original_data_gt1000.csv'
         clust_gt_1 = d_p+'/clustering_gt1000.csv'
-        clust_1 = d_p+'/clustering.csv'
         odl_1 = self.file_len(od_1)
         clust_gtl_1= self.file_len(clust_gt_1)
-        clustl_1 = self.file_len(clust_1)
         
         self.run_command(comp_file='composition_some_shortened.fa',
                          basename=tmp_basename_dir2+'/')
         d_p2 = tmp_basename_dir2
         od_2 = d_p2+'/original_data_gt1000.csv'
         clust_gt_2 = d_p2+'/clustering_gt1000.csv'
-        clust_2 = d_p2+'/clustering.csv'
         odl_2 = self.file_len(od_2)
         clust_gtl_2= self.file_len(clust_gt_2)
-        clustl_2 = self.file_len(clust_2)
         
         assert_true(odl_1!=odl_2,
                     msg='Original data have the same lengths')
         assert_true(clust_gtl_1!=clust_gtl_2,
                     msg='Filtered clustering files have the same lengths')
-        assert_true(clustl_1==clustl_2,
-                    msg='Clustering files does not have the same lengths')
-        assert_true(clust_gtl_2!=clustl_2,
-                    msg='Filtered clustering file and full have the same lengths')
-
-    def test_piping_functionality(self):
-        f1 = tmp_basename_dir+'/stdout_capture'
-        self.run_command(tags=['--pipe','> {0}/stdout_capture'.format(tmp_basename_dir)])
-
-        f1 = open(tmp_basename_dir+'/stdout_capture','rb')
-        f1_content = f1.read()
-        f1.close()
-        f2 = open(tmp_basename_dir + '/clustering.csv','rb')
-        f2_content = f2.read()
-        f2.close()
-        assert_true(len(f1_content)==len(f2_content),
-                    msg='stdout and clustering file is not equal')
-
-    def test_bic_sorted(self):
-        self.run_command()
-        bic = p.io.parsers.read_table(tmp_basename_dir+'/bic.csv',sep=',',index_col=0,header=None)
-        assert_true(max(bic.index) == 5,
-                    msg='BIC columns are probably mixed up')
-        index_l = list(bic.index)
-        assert_true(index_l==[3,4,5],
-                    msg='BIC file is not sorted')
-        # Run command again, to see that file is overwritten
-        self.run_command()
-        bic = p.io.parsers.read_table(tmp_basename_dir+'/bic.csv',sep=',',index_col=0,header=None)
-        assert_true(len(bic)==3,
-                    'BIC file is probably appended to')
 
     def test_logging(self):
         self.run_command()
@@ -283,82 +220,67 @@ class TestCMD(object):
             assert_true(len(log_content)>10,
                         "Log content is too small")
 
+    @nottest
     def test_seed(self):
         #Test default behaviour, seed = 11
-        first_file = None
-        second_file= None
-        first_time = None
-        second_time = None        
-
-        #Should both run with seed 11
         self.run_command()
-        first_time = os.path.getmtime(tmp_basename_dir+'/clustering.csv')
-        with open(tmp_basename_dir+'/clustering.csv','r') as clustering:
+        first_time = os.path.getmtime(tmp_basename_dir+'/clustering_gt1000.csv')
+        with open(tmp_basename_dir+'/clustering_gt1000.csv','r') as clustering:
             first_file=clustering.read()
       
         self.run_command()
-        second_time = os.path.getmtime(tmp_basename_dir+'/clustering.csv')
-        with open(tmp_basename_dir+'/clustering.csv','r') as clustering:
+        second_time = os.path.getmtime(tmp_basename_dir+'/clustering_gt1000.csv')
+        with open(tmp_basename_dir+'/clustering_gt1000.csv','r') as clustering:
             second_file=clustering.read()
         assert_true(not (first_time==second_time),
-                    msg='clustering.csv did not change')
-#        assert_true(first_file == second_file,
-#                    msg='Clustering outcomes were not the same with same seeds')
+                    msg='clustering_gt1000.csv did not change')
+        assert_true(first_file == second_file,
+                    msg='Clustering outcomes were not the same with same seeds')
 
         #Should be equal to both above since default seed is 11
 	self.run_command(tags=["-f","11"])
-        first_time = os.path.getmtime(tmp_basename_dir+'/clustering.csv')
-        with open(tmp_basename_dir+'/clustering.csv','r') as clustering:
+        first_time = os.path.getmtime(tmp_basename_dir+'/clustering_gt1000.csv')
+        with open(tmp_basename_dir+'/clustering_gt1000.csv','r') as clustering:
             first_file=clustering.read()        
         assert_true(not (first_time==second_time),
-                    msg='clustering.csv did not change')
+                    msg='clustering_gt1000.csv did not change')
         assert_true(first_file == second_file,
                     msg='Clustering outcomes were not the same with same seeds')
 
         #Test that 0 gives random seed
-        first_file = None
-        second_file= None
-        first_time = None
-        second_time = None
-        
-        #Should give random clustering
         self.run_command(tags=['-f','0'])
-        first_time = os.path.getmtime(tmp_basename_dir+'/clustering.csv')
-        with open(tmp_basename_dir+'/clustering.csv','r') as clustering:
+        first_time = os.path.getmtime(tmp_basename_dir+'/clustering_gt1000.csv')
+        with open(tmp_basename_dir+'/clustering_gt1000.csv','r') as clustering:
             first_file=clustering.read()
+
         
         #Should give random clustering
         self.run_command(tags=['-f','0'])
-        second_time = os.path.getmtime(tmp_basename_dir+'/clustering.csv')
-        with open(tmp_basename_dir+'/clustering.csv','r') as clustering:
+        second_time = os.path.getmtime(tmp_basename_dir+'/clustering_gt1000.csv')
+        with open(tmp_basename_dir+'/clustering_gt1000.csv','r') as clustering:
             second_file=clustering.read()
         assert_true(not (first_time==second_time),
-                    msg='clustering.csv did not change')
-        assert_true(first_file == second_file,
-                    msg='Clustering outcomes were the same with the different seeds')
+                    msg='clustering_gt1000.csv did not change')
+        assert_true(not (first_file == second_file),
+                    msg='Clustering outcomes were the same with random seeds')
 
 
         #Test that two differnet seeds give different clustering
-        first_file = None
-        second_file= None
-        first_time = None
-        second_time = None
-        
         #Should give clustering 2
         self.run_command(tags=['-f','2'])
-        first_time = os.path.getmtime(tmp_basename_dir+'/clustering.csv')
-        with open(tmp_basename_dir+'/clustering.csv','r') as clustering:
+        first_time = os.path.getmtime(tmp_basename_dir+'/clustering_gt1000.csv')
+        with open(tmp_basename_dir+'/clustering_gt1000.csv','r') as clustering:
             first_file=clustering.read()
         
         #Should give clustering 3
         self.run_command(tags=['-f','3'])
-        second_time = os.path.getmtime(tmp_basename_dir+'/clustering.csv')
-        with open(tmp_basename_dir+'/clustering.csv','r') as clustering:
+        second_time = os.path.getmtime(tmp_basename_dir+'/clustering_gt1000.csv')
+        with open(tmp_basename_dir+'/clustering_gt1000.csv','r') as clustering:
             second_file=clustering.read()
         assert_true(not (first_time==second_time),
-                    msg='clustering.csv did not change')
+                    msg='clustering_gt1000.csv did not change')
         assert_true(not (first_file == second_file),
-                    msg='Clustering outcomes were the same with the different seeds')
+                    msg='Clustering outcomes were the same with different seeds')
 
     def test_log_coverage(self):
         self.run_command()
@@ -381,153 +303,43 @@ class TestCMD(object):
         calc_pseudo_cov = df.sample_1[0]
         assert_almost_equal(true_pseudo_cov,calc_pseudo_cov,places=4)
 
-    def test_split_pca(self):
-        self.run_command(tags=['--split_pca',
-                               '--composition_percentage_pca 90',
-                               '--coverage_percentage_pca 60'])
-        assert_equal(self.c,0,
-                     msg = "Split PCA tag results in error")
 
-        d_p = os.path.join(tmp_basename_dir)
-        assert_true(
-            isfile(d_p+ '/bic.csv'),
-            msg='Bic file is not created'
-            )
-        assert_true(
-            isfile(d_p+ '/clustering_gt1000.csv'),
-            msg='Large contigs clustering file is not created'
-            )
-        assert_true(
-            isfile(d_p+ '/pca_means_gt1000.csv'),
-            msg='Large contigs cluster pca means file is not created'
-            )
-        assert_true(
-            isfile(d_p+ '/pca_variances_gt1000_dim1.csv'),
-            msg='Large contigs cluster pca variances file is not created'
-            )
-        assert_true(
-            isfile(d_p+ '/responsibilities.csv'),
-            msg='Large contigs responsibilities file is not created'
-            )
-        assert_true(
-            isfile(d_p+ '/clustering.csv'),
-            msg='Clustering file is not created'
-            )
-        assert_true(
-            isfile(d_p+ '/PCA_transformed_data_gt1000.csv'),
-            msg='PCA file is not created'
-            )
-        assert_true(
-            isfile(d_p+ '/original_data_gt1000.csv'),
-            msg='Original data file is not created'
-            )
-        assert_true(
-            isfile(d_p+ '/log.txt'),
-            msg='Log file is not created'
-            )
-        self.run_command(basename=tmp_basename_dir2+'/')
-        with open(tmp_basename_dir+'/pca_means_gt1000.csv','r') as pca_m1:
-            pca_means1 = pca_m1.read()
-        with open(tmp_basename_dir2+'/pca_means_gt1000.csv','r') as pca_m2:
-            pca_means2 = pca_m2.read()
-        assert_true(not (pca_means1 == pca_means2),
-                    msg=('Pca mean files same even with different '
-                         'percentage explained variance'))
+    def test_big_file_validation(self):
+        """ Run Validate.pl on the result files after running a larger input 
+        file and make sure the statistics are good enough. """
+        self.run_command(cov_file='large_contigs/coverage_table.tsv', 
+                         comp_file='large_contigs/contigs.fa',
+                         basename=os.path.join(tmp_dir_path, 'large_contigs/'))
 
-    def test_versus_reference_results(self):
-        self.run_command(tags=["-i 100","-m 1"])
-        reference_result_dir = os.path.join(test_dir_path,
-                                            'test_data',
-                                            'reference_result')
-        for ref_f in listdir(reference_result_dir):
-            fn = os.path.basename(ref_f)
-            # Log will have time stamps and thus not the same
-            if fn == 'log.txt':
-                continue
-            new_f = os.path.join(tmp_basename_dir,fn)
-            ref_f = os.path.join(reference_result_dir,fn)
-            with open(ref_f,'r') as ref_fh:
-                ref_f = ref_fh.read()
-            with open(new_f,'r') as new_fh:
-                new_f = new_fh.read()
-            assert_true(ref_f == new_f,
-                        msg=('File not consistent with '
-                             'reference file {0}').format(fn))
+        validate_path = os.path.join(test_dir_path, '..', 'scripts', 'Validate.pl')
+        clustering_reference = os.path.join(test_dir_path, 'test_data', 'large_contigs', 
+                                            'clustering_gt1000_taxassign.csv')
+        clustering_file = os.path.join(tmp_dir_path,'large_contigs',
+                                       'clustering_gt1000.csv')
 
-    def test_versus_reference_results_split_pca(self):
-        self.run_command(tags=["--split_pca", "-i 100", "-m 1"])
-        reference_result_dir = os.path.join(test_dir_path,
-                                            'test_data',
-                                            'reference_result_split_pca')
-        for ref_f in listdir(reference_result_dir):
-            fn = os.path.basename(ref_f)
-            # Log will have time stamps and thus not the same
-            if fn == 'log.txt':
-                continue
-            new_f = os.path.join(tmp_basename_dir,fn)
-            ref_f = os.path.join(reference_result_dir,fn)
-            with open(ref_f,'r') as ref_fh:
-                ref_f = ref_fh.read()
-            with open(new_f,'r') as new_fh:
-                new_f = new_fh.read()
-            assert_true(ref_f == new_f,
-                        msg=('File not consistent with '
-                             'reference file {0}').format(fn))
+        assert_true(isfile(validate_path))
+        assert_true(isfile(clustering_reference))
+        assert_true(isfile(clustering_file))
+        validate_so = subprocess.check_output(['perl', validate_path, 
+                                               '--sfile={}'.format(clustering_reference),
+                                               '--cfile={}'.format(clustering_file) ])
+        print "Results for large clustering file: "
+        print validate_so
+        
+        headers = validate_so.split('\n')[0].split('\t')
+        stats = validate_so.split('\n')[1].split('\t')
+        stats_dict = dict(zip(headers, stats))
 
-    def test_versus_reference_results_no_cov_normalization(self):
-        self.run_command(tags=["-i 100","-m 1","--no_cov_normalization"])
-        reference_result_dir = os.path.join(test_dir_path,
-                                            'test_data',
-                                            'reference_result_no_cov_normalization')
-        for ref_f in listdir(reference_result_dir):
-            fn = os.path.basename(ref_f)
-            # Log will have time stamps and thus not the same
-            if fn == 'log.txt':
-                continue
-            new_f = os.path.join(tmp_basename_dir,fn)
-            ref_f = os.path.join(reference_result_dir,fn)
-            with open(ref_f,'r') as ref_fh:
-                ref_f = ref_fh.read()
-            with open(new_f,'r') as new_fh:
-                new_f = new_fh.read()
-            assert_true(ref_f == new_f,
-                        msg=('File not consistent with '
-                             'reference file {0}').format(fn))
+        assert_true(float(stats_dict['AdjRand']) > 0.85,
+                    msg=("Insufficient adjusted rand index "
+                         "reached, requires > 0.85"))
+        assert_true(float(stats_dict['Prec.']) > 0.95,
+                    msg=("Insufficient precision reached, "
+                         "requires > 0.95"))
+        assert_true(float(stats_dict['Rec.']) > 0.90,
+                    msg=("Insufficient recall reached, "
+                         "requires > 0.90"))
 
-    def test_versus_reference_results_split_pca_no_cov_normalization(self):
-        self.run_command(tags=["--split_pca", "-i 100", "-m 1", "--no_cov_normalization"])
-        reference_result_dir = os.path.join(test_dir_path,
-                                            'test_data',
-                                            'reference_result_split_pca_no_cov_normalization')
-        for ref_f in listdir(reference_result_dir):
-            fn = os.path.basename(ref_f)
-            # Log will have time stamps and thus not the same
-            if fn == 'log.txt':
-                continue
-            new_f = os.path.join(tmp_basename_dir,fn)
-            ref_f = os.path.join(reference_result_dir,fn)
-            with open(ref_f,'r') as ref_fh:
-                ref_f = ref_fh.read()
-            with open(new_f,'r') as new_fh:
-                new_f = new_fh.read()
-            assert_true(ref_f == new_f,
-                        msg=('File not consistent with '
-                             'reference file {0}').format(fn))
-
-    def test_diagonal_covariance_matrix(self):
-        self.run_command(tags=["--covariance_type diag","-i 100",'-m 1'])
-        assert_equal(self.c,0,
-                     msg = ("Command exited with nonzero status "
-                            "when ran with diagonal cov matrix"))
-        fn = 'bic.csv'
-        ref_f = os.path.join(test_dir_path, 'test_data',
-                             'reference_result', fn)
-        new_f = os.path.join(tmp_basename_dir,fn)
-        with open(ref_f,'r') as ref_fh:
-            ref_f = ref_fh.read()
-        with open(new_f,'r') as new_fh:
-            new_f = new_fh.read()
-        assert_true(new_f != ref_f,
-                    msg=('Diagonal cov matrix clustering consistent with '
-                         'reference clustering.'))
-
+        conf_file = os.path.join(test_dir_path, 'Conf.csv')
+        if isfile(conf_file):
+            os.remove(conf_file)
