@@ -1,3 +1,6 @@
+# Notebook checkpoints #
+
+*.ipynb_checkpoints/
 # Python byte comde #
 #####################
 *.pyc
