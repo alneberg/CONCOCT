@@ -37,6 +37,15 @@ docs:
 release: clean
 	python setup.py sdist upload
 
+#docker:
+#python doc/generate_dockerfile.py doc/Dockerfile.template doc/Dockerfile <version>
+#boot2docker up
+#scp doc/Dockerfile docker@192.168.59.103:~/Dockerfile
+#boot2docker ssh
+#docker build .
+#docker images
+#docker tag <docker id> binpro/concoct:<version>
+
 dist: clean
 	python setup.py sdist
 	python setup.py bdist_wheel
