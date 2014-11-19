@@ -43,7 +43,7 @@ class TestCMD(object):
 
     def run_command(self,cov_file='coverage',comp_file='composition.fa',
                     tags=[],basename='nose_tmp_output/1'):
-        call_string = "concoct --coverage_file test_data/{0} --composition_file test_data/{1} --basename {2} -c 10 --no_total_coverage 2> /dev/null".format(cov_file,comp_file,basename)
+        call_string = "concoct cluster --coverage_file test_data/{0} --composition_file test_data/{1} --basename {2} -c 10 --no_total_coverage 2> /dev/null".format(cov_file,comp_file,basename)
         for tag in tags:
             call_string += " " + tag
         self.c = 0 # Exit code
