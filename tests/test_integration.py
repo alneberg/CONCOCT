@@ -358,3 +358,17 @@ class TestCMD(object):
         # The command should have failed with code 255
         assert_true(hasattr(self,"c"))
         assert_equal(self.c,255)
+
+    def test_keep_all_pca(self):
+        """Make sure the pca == 100 doesn't give only one dimension."""
+        self.run_command(tags = ['--total_percentage_pca 100', '-k 1'])
+
+        PCA_trans_data_path = os.path.join(tmp_basename_dir, 'PCA_transformed_data_gt1000.csv')
+        df = p.io.parsers.read_table(PCA_trans_data_path,index_col=0,sep=',')
+        # The number of dimensions should be
+        # 2 + 16
+        # The composition (k=1)
+        # The 16 samples
+        assert_false(len(df.columns) == 1)
+        print df.columns
+        assert_true(len(df.columns) == 18)
