@@ -1,23 +1,16 @@
-Complete Example V0.4
-=====================
+Complete Example V\ |version|
+=============================
 
 This documentation page aims to be a complete example walk through for
-the usage of the CONCOCT package version 0.3.
+the usage of the CONCOCT package version |version|.
 It assumes you have successfully gone through the installation
-description found in the README.
+description found in the :doc:`installation` section of this documentation.
 
 Required software
 -----------------
 
-To run the entire example you need to install all dependencies as stated
-in the `README dependencies <../README.md#dependencies>`__. This
-includes all the optional dependencies. You can also look at
-`doc/Dockerfile <Dockerfile>`__ to help you install these packages on
-your server.
-
-Another way to get everything set up is to use our full Docker image
-(binpro/concoct\_latest) as suggested in the `README
-docker <../README.md#using-docker>`__.
+To run the entire example you need to install all dependencies, including
+all optional dependencies, as stated in the :doc:`installation`.
 
 It is not required to run all steps. The output files for each step are
 in the test data repository. At the end of this example the results
@@ -35,9 +28,6 @@ version of CONCOCT, that you have installed. The test data repository
 can be downloaded
 `here <https://github.com/BinPro/CONCOCT-test-data/releases>`__. Then
 extract it in a suitable location.
-
-If you are running the current unstable master branch of concoct, you
-need to clone the latest version of the test-data-repository as well.
 
 Setting up the test environment
 -------------------------------
@@ -447,5 +437,4 @@ improvement in recall:
     N   M   TL  S   K   Rec.    Prec.   NMI Rand    AdjRand
     684 684 6.8400e+02  5   3   1.000000    0.997076    0.995805    0.999979    0.999957
 
-The algorithm is explained in more depth in the paper on
-`arXiv <http://arxiv.org/abs/1312.4038>`__
+The algorithm is explained in more depth in the paper, abstract can be found on `PubMed <http://www.ncbi.nlm.nih.gov/pubmed/25218180>`__ and the full article in `Nature Methods <http://www.nature.com/nmeth/journal/v11/n11/full/nmeth.3103.html>`__.
