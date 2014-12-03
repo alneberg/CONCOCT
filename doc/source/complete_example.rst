@@ -211,7 +211,7 @@ each contig per sample.
 ::
 
     cd $CONCOCT_EXAMPLE/map
-    python $CONCOCT/scripts/gen_input_table.py --isbedfiles \
+    concoct parse --isbedfiles \
         --samplenames <(for s in Sample*; do echo $s | cut -d'_' -f1; done) \
         ../contigs/velvet_71_c10K.fa */bowtie2/asm_pair-smds.coverage \
     > concoct_inputtable.tsv
@@ -237,13 +237,15 @@ contigs:
 Run concoct
 -----------
 
-To see possible parameter settings with a description run
+Concoct uses subcommands to make the command line interface easier to understand. To see the available subcommands run
 
 ::
 
     $CONCOCT/bin/concoct --help
 
-We will only run concoct for some standard settings here. First we need
+We've alredy used the subcommand `parse` to create the coverage input table,
+now we will use the main subcommand `cluster` to run the clustering algorithm.
+We will only run the clustering for some standard settings here. First we need
 to parse the input table to just contain the mean coverage for each
 contig in each sample:
 
@@ -252,13 +254,13 @@ contig in each sample:
     cd $CONCOCT_EXAMPLE
     cut -f1,3-26 concoct-input/concoct_inputtable.tsv > concoct-input/concoct_inputtableR.tsv
 
-Then run concoct with 40 as the maximum number of cluster ``-c 40``,
+Then run concoct clustering with 40 as the maximum number of cluster ``-c 40``,
 that we guess is appropriate for this data set:
 
 ::
 
     cd $CONCOCT_EXAMPLE
-    concoct -c 40 --coverage_file concoct-input/concoct_inputtableR.tsv --composition_file contigs/velvet_71_c10K.fa -b concoct-output/
+    concoct cluster -c 40 --coverage_file concoct-input/concoct_inputtableR.tsv --composition_file contigs/velvet_71_c10K.fa -b concoct-output/
 
 When concoct has finished the message "CONCOCT Finished, the log shows
 how it went." is piped to stdout. The program generates a number of
