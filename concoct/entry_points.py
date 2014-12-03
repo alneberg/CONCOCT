@@ -3,12 +3,34 @@ from __future__ import division
 import sys
 import logging
 
+# specific for parse
+from signal import signal, SIGPIPE, SIG_DFL
+
 import vbgmm
 
 from concoct.output import Output
 from concoct.cluster import cluster
 from concoct.input import load_data
 from concoct.transform import perform_pca
+from concoct.gen_input_table import generate_input_table
+
+def parse(args):
+    """Author @inodb"""
+    # Get sample names
+    if args.samplenames != None:
+        samplenames = [ s[:-1] for s in open(args.samplenames).readlines() ]
+        if len(samplenames) != len(args.bamfiles):
+            raise Exception("Nr of names in samplenames should be equal to nr of given bamfiles")
+    else:
+        samplenames=None
+
+    # ignore broken pipe error when piping output
+    # http://newbebweb.blogspot.pt/2012/02/python-head-ioerror-errno-32-broken.html
+    signal(SIGPIPE,SIG_DFL)
+
+    generate_input_table(args.fastafile, args.bamfiles,
+        samplenames=samplenames, isbedfiles=args.isbedfiles)
+
 
 def main(args):
 
