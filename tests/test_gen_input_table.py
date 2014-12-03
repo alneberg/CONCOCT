@@ -45,7 +45,7 @@ class TestCMD(object):
         assert not (bam_files and bed_files)
 
         
-        call = ["python", script_path, 
+        call = ["concoct parse",
                 "--samplenames", sample_names,
                 contigs_file]
 
@@ -57,12 +57,9 @@ class TestCMD(object):
         call += ['>', output_file]
 
         self.c = 0
-        #try:
         self.op = subprocess.check_output(
                 " ".join(call) + " 2> /dev/null",
                 shell=True)
-        #except subprocess.CalledProcessError as exc:
-        #    self.c = exc.returncode
 
     def file_len(self,fh):
         i=0
