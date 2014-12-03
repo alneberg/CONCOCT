@@ -2,7 +2,7 @@ import os
 import sys
 from random import randint
 from argparse import ArgumentParser, ArgumentTypeError
-from concoct.entry_points import main
+from concoct.entry_points import main, parse
 
 def set_random_state(seed):
     ERROR="'{0}' should be converatable to integer".format(seed)
@@ -25,6 +25,18 @@ def arguments():
 
     subparsers = parser.add_subparsers()
 
+    ## Parse parser
+    ###################
+    parser_parse = subparsers.add_parser('parse', help='Construct the CONCOCT input file from bam or BED files.')
+    parser_parse.set_defaults(func=parse)
+    parser_parse.add_argument("fastafile", help="Contigs fasta file")
+    parser_parse.add_argument("bamfiles", nargs='+', help="BAM files with mappings to contigs")
+    parser_parse.add_argument("--samplenames", default=None, help="File with sample names, one line each. Should be same nr as bamfiles.")
+    parser_parse.add_argument("--isbedfiles", action='store_true',
+        help="The bamfiles argument are outputs of genomeCoverageBed, not the actual bam file. Skips running genomeCoverageBed from within this script.")
+
+    ## Cluster parser
+    ###################
     parser_cluster = subparsers.add_parser('cluster', help='Run the clustering algorithm, this is the main method of CONCOCT.')
     parser_cluster.set_defaults(func=main)
     #Input files
@@ -83,6 +95,7 @@ def arguments():
     parser_cluster.add_argument('-o','--converge_out', default=False, action="store_true",
       help=('Write convergence info to files.'))
 
+
     parser.add_argument('-v','--version', action='version',
       version=get_version())
 
@@ -90,8 +103,6 @@ def arguments():
 
     if args.func == main:
         check_main_args(args, parser)
-
-
 
     return args
 
