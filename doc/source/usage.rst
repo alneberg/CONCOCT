@@ -2,14 +2,52 @@
 Usage
 =====
 
-CONCOCT uses several command line options to control the clustering, here is a complete documentation of these. These can also be viewed by typing ``concoct -h`` on the command line.::
+CONCOCT uses different subcommands to accomplish different things. To find out which subcommands are available, run ``concoct -h`` on the command line::
 
-	usage: concoct [-h] [--coverage_file COVERAGE_FILE]
-	               [--composition_file COMPOSITION_FILE] [-c CLUSTERS]
-	               [-k KMER_LENGTH] [-l LENGTH_THRESHOLD] [-r READ_LENGTH]
-	               [--total_percentage_pca TOTAL_PERCENTAGE_PCA] [-b BASENAME]
-	               [-s SEED] [-i ITERATIONS] [-e EPSILON] [--no_cov_normalization]
-	               [--no_total_coverage] [-o] [-d] [-v]
+	usage: concoct [-h] [-v] {parse,cluster} ...
+	
+	positional arguments:
+	  {parse,cluster}
+	    parse          Construct the CONCOCT input file from bam or BED files.
+	    cluster        Run the clustering algorithm, this is the main method of
+	                   CONCOCT.
+	
+	optional arguments:
+	  -h, --help       show this help message and exit
+	  -v, --version    show program's version number and exit
+
+
+Parse
+-----
+The `parse` subcommand is used to generate the input table. This functionality was previously included in the script 'gen_input_table.py'. To see the options run ``concoct parse -h``::
+
+	usage: concoct parse [-h] [--samplenames SAMPLENAMES] [--isbedfiles]
+	                     fastafile bamfiles [bamfiles ...]
+	
+	positional arguments:
+	  fastafile             Contigs fasta file
+	  bamfiles              BAM files with mappings to contigs
+	
+	optional arguments:
+	  -h, --help            show this help message and exit
+	  --samplenames SAMPLENAMES
+	                        File with sample names, one line each. Should be same
+	                        nr as bamfiles.
+	  --isbedfiles          The bamfiles argument are outputs of
+	                        genomeCoverageBed, not the actual bam file. Skips
+	                        running genomeCoverageBed from within this script.
+
+
+Cluster
+------
+For the subcommand `cluster` concoct has several command line options to control the clustering, here is a complete documentation of these. These can also be viewed by typing ``concoct cluster -h`` on the command line.::
+
+	usage: concoct cluster [-h] [--coverage_file COVERAGE_FILE]
+	                       [--composition_file COMPOSITION_FILE] [-c CLUSTERS]
+	                       [-k KMER_LENGTH] [-l LENGTH_THRESHOLD] [-r READ_LENGTH]
+	                       [--total_percentage_pca TOTAL_PERCENTAGE_PCA]
+	                       [-b BASENAME] [-s SEED] [-i ITERATIONS] [-e EPSILON]
+	                       [--no_cov_normalization] [--no_total_coverage] [-o]
 	
 	optional arguments:
 	  -h, --help            show this help message and exit
@@ -64,6 +102,4 @@ CONCOCT uses several command line options to control the clustering, here is a c
 	                        coverage normalization but previous to log
 	                        transformation. Use this tag to escape this behaviour.
 	  -o, --converge_out    Write convergence info to files.
-	  -d, --debug           Debug parameters.
-	  -v, --version         show program's version number and exit
 
