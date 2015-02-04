@@ -19,8 +19,6 @@ def parse(args):
     # Get sample names
     if args.samplenames != None:
         samplenames = [ s[:-1] for s in open(args.samplenames).readlines() ]
-        if len(samplenames) != len(args.bamfiles):
-            raise Exception("Nr of names in samplenames should be equal to nr of given bamfiles")
     else:
         samplenames=None
 
@@ -28,7 +26,7 @@ def parse(args):
     # http://newbebweb.blogspot.pt/2012/02/python-head-ioerror-errno-32-broken.html
     signal(SIGPIPE,SIG_DFL)
 
-    generate_input_table(args.fastafile, args.bamfiles,
+    generate_input_table(args.bamfiles,
         samplenames=samplenames, isbedfiles=args.isbedfiles)
 
 

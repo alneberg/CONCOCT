@@ -1,24 +1,14 @@
 """
-@author: inodb
+@author: inodb, alneberg
 """
 import sys
 import os
 import subprocess
 import errno
 from signal import signal, SIGPIPE, SIG_DFL
-
+import pysam
+import pandas as p
 from Bio import SeqIO
-
-def get_gc_and_len_dict(fastafile):
-    """Creates a dictionary with the fasta id as key and GC and length as keys
-    for the inner dictionary."""
-    out_dict = {}
-
-    for rec in SeqIO.parse(fastafile, "fasta"):
-        out_dict[rec.id] = {}
-        out_dict[rec.id]["length"] = len(rec.seq)
-
-    return out_dict
 
 
 def get_bedcov_dict(bedcoverage):
@@ -39,29 +29,44 @@ def get_bedcov_dict(bedcoverage):
     for line in fh:
         cols = line.split()
 
-        try:
-            d = out_dict[cols[0]]
-        except KeyError:
-            d = {}
-            out_dict[cols[0]] = d
+        if cols[0] == 'genome':
+            continue
+        
+        if cols[0] not in out_dict:
+            out_dict[cols[0]] = 0
 
-        if int(cols[1]) == 0:
-            d["percentage_covered"] = 100 - float(cols[4]) * 100.0
-        else:
-            d["cov_mean"] = d.get("cov_mean", 0) + int(cols[1]) * float(cols[4])
-
+        if int(cols[1]) != 0:
+            out_dict[cols[0]] += int(cols[1]) * float(cols[4])
+    
     return out_dict
+
+def get_bam_dict(bamfile):
+    """Uses samtools pileup engine to calculate average coverage for each contig"""
+    output_dict = {}
+    samfile = pysam.AlignmentFile(bamfile, "rb")
+
+    for ref, rlen in zip(samfile.references, samfile.lengths):
+        iterator = samfile.pileup(reference = ref)
+        avg_covs = sum(x.n for x in iterator) / float(rlen)
+        output_dict[ref] = avg_covs
+
+    return output_dict
 
 def print_sample_columns(t):
     sys.stdout.write(("\tcov_mean_sample_%s" * len(t)) % t)
 
+def print_input_table(covdicts):
+    """Write output""" 
+    df = p.DataFrame.from_dict(covdicts)
+    df.fillna(0.0)
+    df.to_csv(sys.stdout, sep='\t')
 
-def print_input_table(fastadict, bedcovdicts, samplenames=None):
+def print_input_table_old(fastadict, bedcovdicts, samplenames=None):
     """Writes the input table for Probin to stdout. See hackathon google
     docs."""
 
     # Header
-    sys.stdout.write("contig\tlength")
+    sys.stdout.write("contig")
     if samplenames == None:
         # Use index if no sample names given in header
         print_sample_columns(tuple(range(len(bedcovdicts))))
@@ -72,7 +77,6 @@ def print_input_table(fastadict, bedcovdicts, samplenames=None):
     sys.stdout.write("\n")
 
     # Content
-    assert(len(fastadict) > 0)
     for acc in fastadict:
         # fasta stats
         sys.stdout.write("%s\t%s"  %
@@ -93,9 +97,9 @@ def print_input_table(fastadict, bedcovdicts, samplenames=None):
 
         sys.stdout.write("\n")
 
-def generate_input_table(fastafile, bamfiles, samplenames=None, isbedfiles=False):
+def generate_input_table_old(fastafile, bamfiles, samplenames=None, isbedfiles=False):
     """Reads input files into dictionaries then prints everything in the table
-    format required for running ProBin."""
+    format required for running CONCOCT."""
     bedcovdicts = []
     
     # Determine coverage information from bam file using BEDTools
@@ -112,3 +116,24 @@ def generate_input_table(fastafile, bamfiles, samplenames=None, isbedfiles=False
             bedcovdicts.append(get_bedcov_dict(bf))
                 
     print_input_table(get_gc_and_len_dict(fastafile), bedcovdicts, samplenames=samplenames)
+
+def generate_input_table(bamfiles, samplenames=None, isbedfiles=False):
+    covdicts = {}
+
+    if samplenames is None:
+        samplenames = [os.path.basename(bf) for bf in bamfiles]
+    
+        if len(samplenames) != len(set(samplenames)):
+            raise Exception("No sample names were given, but file names are not unique")
+    else:
+        if len(samplenames) != len(set(samplenames)):
+            raise Exception("Sample names given are not unique")
+
+    for bamfile, sample_name in zip(bamfiles, samplenames):
+        if isbedfiles == False:
+            covdicts[sample_name] = get_bam_dict(bamfile)
+        else:
+            covdicts[sample_name] = get_bedcov_dict(bamfile)
+
+    print_input_table(covdicts)
+
