@@ -44,6 +44,8 @@ def arguments():
               "value will not be included. Defaults to 1000."))
     parser.add_argument('-r','--read_length', type=int, default=100,
         help='specify read length for coverage, default 100')
+    parser.add_argument('-m', '--matrix_shape', choices=["spherical", "diag", "tied", "full"],
+            default="full", help=("Choose the shape of the covariance matrix"))
     #Joined PCA
     parser.add_argument('--total_percentage_pca', default=90, type=int,
                         help=('The percentage of variance explained'

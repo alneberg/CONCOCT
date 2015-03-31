@@ -3,7 +3,6 @@ from __future__ import division
 
 import sys
 import logging
-import vbgmm
 
 from concoct.output import Output
 from concoct.parser import arguments
@@ -11,7 +10,8 @@ from concoct.cluster import cluster
 from concoct.input import load_data
 from concoct.transform import perform_pca
 
-import vbgmm
+import pandas as p
+from sklearn.mixture import GMM
 
 def main(args):
     # Initialize output handling
@@ -61,7 +61,14 @@ def main(args):
 
     logging.info('Will call vbgmm with parameters: %s, %s, %s' % (Output.CONCOCT_PATH, args.clusters, args.length_threshold))
 
-    vbgmm.fit(Output.CONCOCT_PATH, args.clusters, args.length_threshold,args.seed,args.iterations,args.epsilon,args.converge_out)
+    
+    gmm = GMM(args.clusters, args.matrix_shape)
+    gmm.fit(joined)
+    
+    labels = gmm.predict(joined)
+
+    s = p.Series(dict(zip(joined.index, labels)))
+    s.to_csv("{0}clustering_gt{1}.csv".format(args.basename, args.length_threshold))
 
     logging.info("CONCOCT Finished")
 
