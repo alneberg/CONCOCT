@@ -35,7 +35,7 @@ def arguments():
 
     #Handle cluster number parsing
     parser.add_argument('-c', '--clusters', default=400, type=int,
-      help='specify maximal number of clusters for VGMM, default 400.')
+      help='specify exact number of clusters for GMM, default 400.')
     #Kmer length, kmer count threshold and read length
     parser.add_argument('-k','--kmer_length', type=int, default=4,
         help='specify kmer length, default 4.')
