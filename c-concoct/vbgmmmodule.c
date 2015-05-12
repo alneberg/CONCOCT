@@ -1,3 +1,5 @@
+#include <Python.h>
+
 /*System includes*/
 #include <stdlib.h>
 #include <stdio.h>
@@ -25,8 +27,6 @@
 #include <gsl/gsl_randist.h>
 #include <gsl/gsl_cblas.h>
 #include <pthread.h>
-
-#include <Python.h>
 
 /*User includes*/
 #include "vbgmmmodule.h"
@@ -125,6 +125,8 @@ int driver(const char* szFileStub, int nKStart, int nLMin, unsigned long lSeed, 
   }
   runRThreads((void *) &ptBestCluster);
 
+  fprintf(stderr, "Right before compressCluster\n");
+  fflush(stderr);
   compressCluster(ptBestCluster);
 
   calcCovarMatrices(ptBestCluster,&tData);
@@ -1664,9 +1666,17 @@ void* fitEM(void *pvCluster)
 
   gsl_rng_set (ptGSLRNG, ptCluster->lSeed);
 
+  fprintf(stderr, "nThread: %d \n", ptCluster->nThread);
+  fflush(stderr);
+  
+  fprintf(stderr, "lSeed: %lu \n", ptCluster->lSeed);
+  fflush(stderr);
   initKMeans(ptGSLRNG, ptCluster, ptCluster->ptData);
 
   gmmTrainVB(ptCluster, ptCluster->ptData);
+
+  fprintf(stderr, "dVBL wihtin fitEM: %f \n", ptCluster->dVBL);
+  fflush(stderr);
 
   gsl_rng_free(ptGSLRNG);
 
@@ -1684,6 +1694,7 @@ void* runRThreads(void *pvpDCluster)
   int         r = 0, nBestR = -1;
   char        *szCOutFile = NULL;
   aptCluster = (t_Cluster **) malloc(N_RTHREADS*sizeof(t_Cluster*));
+
   if(!aptCluster)
     goto memoryError;
 
@@ -1708,7 +1719,9 @@ void* runRThreads(void *pvpDCluster)
   /*free up memory associated with input cluster*/
   free(ptDCluster);
 
-  for(r = 0; r < N_RTHREADS; r++){
+  for(r = 0; r < N_RTHREADS; r++){ 
+    fprintf(stderr, "dVBL: %f \n", aptCluster[r]->dVBL);
+    fflush(stderr);
     if(aptCluster[r]->dVBL > dBestVBL){
       nBestR = r;
       dBestVBL = aptCluster[r]->dVBL;
@@ -1763,7 +1776,11 @@ void compressCluster(t_Cluster *ptCluster)
   int i = 0, k = 0, nNewK = 0, nN = ptCluster->nN;
   double **aadNewZ = NULL, dN = (double) nN;
 
+  fprintf(stderr, "Original nK: %d \n", ptCluster->nK);
+  fflush(stderr);
   for(i = 0; i < ptCluster->nK; i++){
+    fprintf(stderr, "adPi: %f \n", ptCluster->adPi[i]);
+    fflush(stderr);
     if(ptCluster->adPi[i] > 0.0){
       nNewK++;
     }
@@ -1798,11 +1815,14 @@ void compressCluster(t_Cluster *ptCluster)
   ptCluster->aadZ = aadNewZ;
   ptCluster->nK = nNewK;
 
+  fprintf(stderr, "The k: %d\n", ptCluster->nK);
+  fflush(stderr);
   /*recalculate Pi*/
   for(k = 0; k < ptCluster->nK; k++){
     ptCluster->adPi[k] = 0.0;
     for(i = 0; i < nN; i++){
       ptCluster->adPi[k] += ptCluster->aadZ[i][k];
+    
     }
     ptCluster->adPi[k] /= dN;
   }
