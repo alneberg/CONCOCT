@@ -29,8 +29,8 @@ def original_contig_name(s):
         # was part of the original contig
         return s
 
-def main(args):
-    df = pd.read_table(args.clustering, sep=',', header=False, names=["contig_id", "cluster_id"])
+def main(clustering):
+    df = pd.read_table(clustering, sep=',', header=False, names=["contig_id", "cluster_id"])
     df['orig_contig_id'] = df.contig_id.apply(original_contig_name)
     majority_vote = {}
     for orig_contig_id, group_df in df.groupby('orig_contig_id'):
@@ -42,8 +42,8 @@ def main(args):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=DESC)
     parser.add_argument("clustering", help=("clustering_gtX.csv file from the CONCOCT output."
-        "The contig names on the form contig_name.n, where n is an integer less than 1000 is "
+        "The contig names on the form contig_name.n, where n is an integer less than 1000 and is "
         "assumed to originate from contig_name."))
     args = parser.parse_args()
 
-    main(args)
+    main(args.clustering)
