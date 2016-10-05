@@ -4,7 +4,21 @@ import logging
 import numpy as np
 import pandas as p
 
-from itertools import product, tee, izip
+from itertools import product, tee
+try:
+    # python 2
+    from itertools import izip
+except ImportError:
+    # python 3
+    izip = zip
+
+try:
+    # python 2
+    xrange
+except NameError:
+    # python 3
+    xrange = range
+
 from collections import Counter, OrderedDict
 
 from Bio import SeqIO

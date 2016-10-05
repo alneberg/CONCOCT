@@ -246,7 +246,7 @@ class TestCMD(object):
                     msg='Clustering outcomes were not the same with same seeds')
 
         #Should be equal to both above since default seed is 11
-	self.run_command(tags=["-f","11"])
+        self.run_command(tags=["-f","11"])
         first_time = os.path.getmtime(tmp_basename_dir+'/clustering_gt1000.csv')
         with open(tmp_basename_dir+'/clustering_gt1000.csv','r') as clustering:
             first_file=clustering.read()        
@@ -328,9 +328,7 @@ class TestCMD(object):
         validate_so = subprocess.check_output(['perl', validate_path, 
                                                '--sfile={}'.format(clustering_reference),
                                                '--cfile={}'.format(clustering_file) ])
-        print "Results for large clustering file: "
-        print validate_so
-        
+
         headers = validate_so.split('\n')[0].split('\t')
         stats = validate_so.split('\n')[1].split('\t')
         stats_dict = dict(zip(headers, stats))
