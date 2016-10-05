@@ -58,6 +58,10 @@ def main(args):
         args.length_threshold
         )
 
+    Output.write_pca_explained_variance(
+        pca.explained_variance_ratio_,
+        args.length_threshold
+        )
     logging.info('PCA transformed data.')
 
     logging.info('Will call vbgmm with parameters: %s, %s, %s' % (Output.CONCOCT_PATH, args.clusters, args.length_threshold))

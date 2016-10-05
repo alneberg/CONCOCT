@@ -46,6 +46,8 @@ class Output(object):
             "PCA_transformed_data_gt{0}.csv"
         self.PCA_COMPONENTS_FILE_BASE = self.CONCOCT_PATH + \
             "PCA_components_data_gt{0}.csv"
+        self.PCA_EXPLAINED_VARIANCE_FILE_BASE = self.CONCOCT_PATH + \
+            "PCA_explained_variance_data_gt{0}.csv"
         self.LOG_FILE_BASE = self.CONCOCT_PATH + 'log.txt'
 
         logging.basicConfig(
@@ -84,6 +86,16 @@ class Output(object):
             delimiter=","
         )
         logging.info('Wrote PCA components file.')
+
+    @classmethod
+    def write_pca_explained_variance(self, variance_ratios, threshold):
+        np.savetxt(
+            self.PCA_EXPLAINED_VARIANCE_FILE_BASE.format(threshold),
+            variance_ratios,
+            fmt=self.FLOAT_FORMAT,
+            delimiter=","
+        )
+        logging.info('Wrote PCA explained variances file.')
 
     @classmethod
     def write_original_data(self,original,threshold):
