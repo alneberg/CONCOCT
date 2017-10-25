@@ -67,7 +67,7 @@ def main(args):
     N_contigs = transform_filter.shape[0]
     assign = np.zeros(N_contigs, dtype=np.int32)
    
-    assign = vbgmm.fit(np.copy(transform_filter,order='C'),int(args.clusters),int(args.threads))
+    assign = vbgmm.fit(np.copy(transform_filter,order='C'),int(args.clusters),int(args.threads), args.diagonal_covar)
  
     
     Output.write_assign(

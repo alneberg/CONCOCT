@@ -88,6 +88,7 @@ def arguments():
 
     parser.add_argument('-d','--debug', default=False, action="store_true",
       help=('Debug parameters. '))
+    parser.add_argument('--diagonal', action='store_true', help="Using this tag will use a diagonal model for the covariance matrices")
     parser.add_argument('-v','--version', action='version',
       version=get_version())
 
