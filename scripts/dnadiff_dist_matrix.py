@@ -14,7 +14,7 @@ Otherwise they are just counted from 0 to len(fastafiles)
 The distance between each bin is computed using the 1-to-1 alignments of the
 report files (not M-to-M):
 
-1 - AvgIdentity if min(AlignedBases) >= min_coverage. Otherwise distance is 1.
+1 - AvgIdentity if max(AlignedBases) >= min_coverage. Otherwise distance is 1.
 Or 0 to itself.
 
 Resulting matrix is printed to stdout and to output_folder/dist_matrix.tsv. The
@@ -136,23 +136,41 @@ def parallel_run_dnadiff_pairwise(fasta_files, fasta_names, output_folder):
     pool.join()
 
 
-def get_dist_matrix(pairwise_folder, fasta_names, min_coverage):
+def get_dist_matrix_and_stats(pairwise_folder, fasta_names, min_coverage):
     """Returns distance matrix from folder constructed with
     run_dnadiff_pairwise"""
     matrix = np.array(len(fasta_names) * [len(fasta_names) * [0.0]])
+    alignment_stats = {}
     for i in range(len(fasta_names)):
         for j in range(i + 1, len(fasta_names)):
-            repfile = ospj(pairwise_folder, "{fn1}_vs_{fn2}".format(
-                fn1=fasta_names[i], fn2=fasta_names[j]), "out.report")
-            mumr = MUMmerReport(repfile)
-            if min(mumr.aligned_bases) >= min_coverage:
+            dir_name = "{fn1}_vs_{fn2}".format(fn1=fasta_names[i], fn2=fasta_names[j])
+            repfile = ospj(pairwise_folder, dir_name, "out.report")
+            try:
+                mumr = MUMmerReport(repfile)
+            except IOError:
+                #Its a bit too fragile to assume exact order of input files
+                dir_name = "{fn2}_vs_{fn1}".format(fn1=fasta_names[i], fn2=fasta_names[j])
+                repfile = ospj(pairwise_folder, dir_name, "out.report")
+                mumr = MUMmerReport(repfile)
+            alignment_stats[dir_name] = {}
+            alignment_stats[dir_name]["aligned_bases_min"] = min(mumr.aligned_bases)
+            alignment_stats[dir_name]["aligned_bases_max"] = max(mumr.aligned_bases)
+            alignment_stats[dir_name]["avg_identity"] = mumr.avg_identity[0]
+
+            if max(mumr.aligned_bases) >= min_coverage:
                 # take distance as 1 - AvgIdentity (same for both ref and qry)
                 matrix[i][j] = 1.0 - (mumr.avg_identity[0] / 100.0)
             else:
                 matrix[i][j] = 1.0
             matrix[j][i] = matrix[i][j]
 
-    return matrix
+    return matrix, alignment_stats
+
+def print_alignment_stats(alignment_stats, out_dir):
+    with open(ospj(out_dir, "alignment_stats.tsv"), 'w') as outfile:
+        outfile.write("\t".join(["alignment_name", "aligned_bases_max", "aligned_bases_min", "avg_identity"]) + '\n')
+        for alignment_dir, stats in alignment_stats.iteritems():
+            outfile.write("\t".join([alignment_dir, str(stats['aligned_bases_max']), str(stats['aligned_bases_min']), str(stats['avg_identity'])]) + '\n')
 
 
 def plot_dist_matrix(matrix, fasta_names, heatmap_out, dendrogram_out):
@@ -272,12 +290,15 @@ def main(output_folder, fasta_files, fasta_names, min_coverage,
     else:
         logging.info("Skipping dnadiff")
     if not skip_matrix:
-        matrix = get_dist_matrix(output_folder, fasta_names, min_coverage)
+        matrix, alignment_stats = get_dist_matrix_and_stats(output_folder, fasta_names, min_coverage)
         # save distance matrix to file
         logging.info("Writing distance matrix to "
                 "{}".format(ospj(output_folder, "dist_matrix.tsv")))
-        np.savetxt(ospj(output_folder, "dist_matrix.tsv"), matrix, fmt="%.2f",
+        np.savetxt(ospj(output_folder, "dist_matrix.tsv"), matrix, fmt="%.8f",
                 delimiter="\t")
+        logging.info("writing alignment statistics to "
+                "{}".format(ospj(output_folder, "alignment_stats.tsv")))
+        print_alignment_stats(alignment_stats, output_folder)
     else:
         logging.info("Skipping matrix calculation")
     if not skip_plot:
