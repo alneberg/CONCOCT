@@ -11,9 +11,10 @@ from Bio import SeqIO
 
 def load_data(args):
     composition, contig_lengths = load_composition(
-        args.composition_file, 
-        args.kmer_length, 
-        args.length_threshold
+        args.composition_file,
+        args.kmer_length,
+        args.length_threshold,
+        args.standardize
         )
 
     if args.coverage_file:
@@ -62,24 +63,32 @@ def _calculate_composition(comp_file, length_threshold, kmer_len):
     contig_lengths = p.Series(contig_lengths, dtype=float)
     return composition, contig_lengths
 
-def load_composition(comp_file, kmer_len, threshold):
+def load_composition(comp_file, kmer_len, threshold, standardize=False):
     #Composition
     composition, contig_lengths = _calculate_composition(
-            comp_file, 
+            comp_file,
             threshold,
             kmer_len
             )
 
     #Normalize kmer frequencies to remove effect of contig length
     #log(p_ij) = log[(X_ij +1) / rowSum(X_ij+1)]
-    composition = np.log(composition.divide(composition.sum(axis=1),axis=0))
-    
+    composition = composition.divide(composition.sum(axis=1),axis=0)
+    if standardize:
+        scaler = StandardScaler(copy=True, with_mean=True, with_std=True)
+        composition = scaler.fit_transform(composition)
+    else:
+        composition = np.log(composition)
+
     logging.info('Successfully loaded composition data.')
     return composition, contig_lengths
 
-def load_coverage(cov_file, contig_lengths, no_cov_normalization, add_total_coverage=False, read_length=100):
+def load_coverage(cov_file, contig_lengths, no_cov_normalization, add_total_coverage=False, read_length=100, standardize=False):
     #Coverage import, file has header and contig ids as index
     cov = p.read_table(cov_file, header=0, index_col=0)
+
+    # Assert length is not in cov columns
+    assert 'length' not in cov.columns
 
     cov = cov[cov.index.isin(contig_lengths.index)]
 
@@ -101,7 +110,7 @@ def load_coverage(cov_file, contig_lengths, no_cov_normalization, add_total_cove
     if add_total_coverage:
         cov['total_coverage'] = cov.ix[:,cov_range[0]:cov_range[1]].sum(axis=1)
         temp_cov_range = (cov_range[0],'total_coverage')
-    
+
     if not no_cov_normalization:
         # Normalize contigs next
         cov.ix[:,cov_range[0]:cov_range[1]] = \
@@ -110,13 +119,17 @@ def load_coverage(cov_file, contig_lengths, no_cov_normalization, add_total_cove
     if temp_cov_range:
         cov_range = temp_cov_range
 
-    # Log transform
-    cov.ix[:,cov_range[0]:cov_range[1]] = np.log(
-        cov.ix[:,cov_range[0]:cov_range[1]])
+    if standardize:
+        scaler = StandardScaler(copy=True, with_mean=True, with_std=True)
+        cov = scaler.fit_transform(cov)
+    else:
+        # Log transform
+        cov.ix[:,cov_range[0]:cov_range[1]] = np.log(
+            cov.ix[:,cov_range[0]:cov_range[1]])
 
     logging.info('Successfully loaded coverage data.')
     return cov, cov_range
-    
+
 def _normalize_per_sample(arr):
     """ Divides respective column of arr with its sum. """
     return arr.divide(arr.sum(axis=0),axis=1)
