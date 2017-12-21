@@ -8,6 +8,7 @@ from itertools import product, tee, izip
 from collections import Counter, OrderedDict
 
 from Bio import SeqIO
+from sklearn.preprocessing import StandardScaler
 
 def load_data(args):
     composition, contig_lengths = load_composition(
@@ -23,7 +24,8 @@ def load_data(args):
             contig_lengths,
             args.no_cov_normalization,
             add_total_coverage = (not args.no_total_coverage),
-            read_length = args.read_length
+            read_length = args.read_length,
+            standardize = args.standardize
             )
     else:
         cov, cov_range = None, None
@@ -76,7 +78,9 @@ def load_composition(comp_file, kmer_len, threshold, standardize=False):
     composition = composition.divide(composition.sum(axis=1),axis=0)
     if standardize:
         scaler = StandardScaler(copy=True, with_mean=True, with_std=True)
-        composition = scaler.fit_transform(composition)
+        saved_index = composition.index
+        composition = p.DataFrame(scaler.fit_transform(composition))
+        composition.index = saved_index
     else:
         composition = np.log(composition)
 
@@ -89,6 +93,7 @@ def load_coverage(cov_file, contig_lengths, no_cov_normalization, add_total_cove
 
     # Assert length is not in cov columns
     assert 'length' not in cov.columns
+    assert 'Length' not in cov.columns
 
     cov = cov[cov.index.isin(contig_lengths.index)]
 
@@ -96,9 +101,16 @@ def load_coverage(cov_file, contig_lengths, no_cov_normalization, add_total_cove
     cov_range = (cov.columns[0],cov.columns[-1])
 
     # Adding pseudo count
-    cov.ix[:,cov_range[0]:cov_range[1]] = cov.ix[:,cov_range[0]:cov_range[1]].add(
-            (read_length/contig_lengths),
-            axis='index')
+    if not standardize: 
+        cov.ix[:,cov_range[0]:cov_range[1]] = cov.ix[:,cov_range[0]:cov_range[1]].add(
+                (read_length/contig_lengths),
+                axis='index')
+    else:
+        # Adding a relatively high pseudocount so that 
+        # differences between small values are not blown up
+        # by the log transform
+        cov.ix[:,cov_range[0]:cov_range[1]] += 1 
+
 
     if not no_cov_normalization:
         #Normalize per sample first
@@ -119,13 +131,18 @@ def load_coverage(cov_file, contig_lengths, no_cov_normalization, add_total_cove
     if temp_cov_range:
         cov_range = temp_cov_range
 
+    # Log transform
+    cov.ix[:,cov_range[0]:cov_range[1]] = np.log(
+        cov.ix[:,cov_range[0]:cov_range[1]])
+
     if standardize:
+        cov.ix[:, cov_range[0]:cov_range[1]]
         scaler = StandardScaler(copy=True, with_mean=True, with_std=True)
-        cov = scaler.fit_transform(cov)
-    else:
-        # Log transform
-        cov.ix[:,cov_range[0]:cov_range[1]] = np.log(
-            cov.ix[:,cov_range[0]:cov_range[1]])
+        saved_index = cov.index
+        saved_columns = cov.columns
+        cov = p.DataFrame(scaler.fit_transform(cov))
+        cov.index = saved_index
+        cov.columns = saved_columns
 
     logging.info('Successfully loaded coverage data.')
     return cov, cov_range

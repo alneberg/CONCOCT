@@ -83,6 +83,9 @@ def arguments():
       help=("By default the original data is saved to disk. For big datasets, "
             "especially when a large k is used for compositional data, this file can become "
             "very large. Use this tag if you don't want to save the original data."))
+    parser.add_argument('--standardize', default=False, action="store_true",
+      help=("Use standardization instead of log transformation, should normally "
+            "be used together with --no_total_coverage and --no_cov_normalization"))
     parser.add_argument('-o','--converge_out', default=False, action="store_true",
       help=('Write convergence info to files.'))
 
