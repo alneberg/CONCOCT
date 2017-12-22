@@ -87,7 +87,7 @@ def arguments():
     parser.add_argument('--standardize', default=False, action="store_true",
       help=("Use standardization instead of log transformation, should normally "
             "be used together with --no_total_coverage and --no_cov_normalization"))
-    parser.add_argument('--weight', default=1.0, type=float, 
+    parser.add_argument('-w', '--weight', default=1.0, type=float, 
       help=('The amount of weight that will be associated with the coverage information '
           'as opposed to the nucleotide composition information. After standardization '
           'or normalization, the coverage information will be multiplied with this value '
