@@ -30,6 +30,8 @@ def load_data(args):
     else:
         cov, cov_range = None, None
 
+    cov.ix[:,cov_range[0]:cov_range[1]] *= args.weight
+
     return composition, cov, cov_range
 
 

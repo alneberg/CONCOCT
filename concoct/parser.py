@@ -59,6 +59,7 @@ def arguments():
             "will be placed. Path to existing directory or basename"
             "with a trailing '/' will be interpreted as a directory."
             "If not provided, current directory will be used."))
+    # Run params
     parser.add_argument('-s','--seed',type=set_random_state, default=set_random_state(1),
       help=('Specify an integer to use as seed for clustering. '
             '0 gives a random seed, 1 is the default seed and '
@@ -86,9 +87,14 @@ def arguments():
     parser.add_argument('--standardize', default=False, action="store_true",
       help=("Use standardization instead of log transformation, should normally "
             "be used together with --no_total_coverage and --no_cov_normalization"))
+    parser.add_argument('--weight', default=1.0, type=float, 
+      help=('The amount of weight that will be associated with the coverage information '
+          'as opposed to the nucleotide composition information. After standardization '
+          'or normalization, the coverage information will be multiplied with this value '
+          'to gain more influence through the pca transformation. The default value 1.0 '
+          'will maintain the original data.'))
     parser.add_argument('-o','--converge_out', default=False, action="store_true",
       help=('Write convergence info to files.'))
-
     parser.add_argument('-d','--debug', default=False, action="store_true",
       help=('Debug parameters. '))
     parser.add_argument('-v','--version', action='version',
