@@ -10,22 +10,23 @@ Required software
 -----------------
 
 To run the entire example you need to install all dependencies as stated
-in the `README dependencies <../README.md#dependencies>`__. This
+in the :ref:`installation` documentation. This
 includes all the optional dependencies. You can also look at
-`doc/Dockerfile <Dockerfile>`__ to help you install these packages on
+`Dockerfile <Dockerfile>`__ to help you install these packages on
 your server.
 
-Another way to get everything set up is to use our full Docker image
-(binpro/concoct\_latest) as suggested in the `README
-docker <../README.md#using-docker>`__.
 
 It is not required to run all steps. The output files for each step are
 in the test data repository. At the end of this example the results
 should be the same as the results in the corresponding test data
 repository: https://github.com/BinPro/CONCOCT-test-data/releases. The
-version numbers listed above are the ones used to generate the results
+version numbers listed below are the ones used to generate the results
 in that repository. Using newer versions will probably not be a problem,
-but your results may be different in that case.
+but your results may in that case be different.
+
+
+Versions of softwares used:
+  - CONCOCT == |version|
 
 Downloading test data
 ---------------------
@@ -35,9 +36,6 @@ version of CONCOCT, that you have installed. The test data repository
 can be downloaded
 `here <https://github.com/BinPro/CONCOCT-test-data/releases>`__. Then
 extract it in a suitable location.
-
-If you are running the current unstable master branch of concoct, you
-need to clone the latest version of the test-data-repository as well.
 
 Setting up the test environment
 -------------------------------

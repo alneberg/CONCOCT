@@ -15,7 +15,7 @@ Fundamental dependencies
     gcc
     gsl
 
-These items are prerequisities for the installation of concoct as
+These items are prerequisites for the installation of concoct as 
 described below. The installation procedure varies on different systems,
 and described in this README is only how to proceed with a linux
 (ubuntu) distribution.
