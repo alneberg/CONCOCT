@@ -1,8 +1,8 @@
-Complete Example V0.4
-=====================
+Complete Example Version |version|
+==================================
 
 This documentation page aims to be a complete example walk through for
-the usage of the CONCOCT package version 0.3.
+the usage of the CONCOCT package version |version|.
 It assumes you have successfully gone through the installation
 description found in the README.
 
@@ -125,7 +125,7 @@ running Velvet are:
     cat $CONCOCT_TEST/reads/Sample*_R1.fa > All_R1.fa
     cat $CONCOCT_TEST/reads/Sample*_R2.fa > All_R2.fa
     velveth velveth_k71 71 -fasta -shortPaired -separate All_R1.fa All_R2.fa
-    velvetg velveth_k71 -ins_length 400 -exp_cov auto -cov_cutoff auto  
+    velvetg velveth_k71 -ins_length 400 -exp_cov auto -cov_cutoff auto
 
 After the assembly is finished create a directory with the resulting
 contigs and copy the result of Velvet there (this output is also in
@@ -394,7 +394,7 @@ required to let them know who you are.
     -c concoct-output/clustering_gt1000.csv \
     --cdd_cog_file $CONCOCT/scgs/cdd_to_cog.tsv > evaluation-output/clustering_gt1000_scg.tab
 
-The script requires the clustering output by concoct 
+The script requires the clustering output by concoct
 ``concoct-output/clustering_gt1000.csv``, a file listing a set of SCGs
 (e.g. a set of COG ids) to use
 ``scgs/scg_cogs_min0.97_max1.03_unique_genera.txt`` and a mapping of
