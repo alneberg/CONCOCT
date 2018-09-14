@@ -3,8 +3,8 @@ Complete Example Version |version|
 
 This documentation page aims to be a complete example walk through for
 the usage of the CONCOCT package version |version|.
-It assumes you have successfully gone through the installation
-description found in the README.
+It assumes you have successfully gone through the
+:ref:`installation` description.
 
 Required software
 -----------------
