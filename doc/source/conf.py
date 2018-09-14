@@ -59,7 +59,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'CONCOCT'
-copyright = u'2014, Johannes Alneberg, Brynjar Smari Bjarnason, Ino de Bruijn, Melanie Schirmer, Joshua Quick, Umer Z. Ijaz, Nicholas J. Loman, Anders F. Andersson, Christopher Quince'
+copyright = u'2018, Johannes Alneberg, Brynjar Smari Bjarnason, Ino de Bruijn, Melanie Schirmer, Joshua Quick, Umer Z. Ijaz, Nicholas J. Loman, Anders F. Andersson, Christopher Quince'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
