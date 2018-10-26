@@ -10,7 +10,6 @@
 #
 
 FROM ubuntu:18.04
-COPY . /opt/CONCOCT
 
 # Get basic ubuntu packages needed
 RUN apt-get update -qq
@@ -18,14 +17,11 @@ RUN apt-get install -qq wget build-essential libgsl0-dev git zip unzip bedtools 
 
 RUN pip install --upgrade pip
 
+COPY . /opt/CONCOCT
+
 # Install python dependencies and fetch and install CONCOCT 0.5.0
 RUN cd /opt/CONCOCT;\
-    pip install -r requirements.txt;\
-    
-#    wget --no-check-certificate https://github.com/BinPro/CONCOCT/archive/0.5.0.tar.gz;\
-#    tar xf 0.5.0.tar.gz;\
-#    cd CONCOCT-0.5.0;\
-#    python setup.py install
+    pip install -r requirements.txt;
 
 RUN cd /opt/CONCOCT/;\
     python setup.py install
