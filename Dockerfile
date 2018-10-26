@@ -13,9 +13,17 @@ FROM ubuntu:18.04
 
 # Get basic ubuntu packages needed
 RUN apt-get update -qq
-RUN apt-get install -qq wget build-essential libgsl0-dev git zip unzip bedtools python-pip
+RUN apt-get install -qq wget build-essential libgsl0-dev git zip unzip bedtools
 
-RUN pip install --upgrade pip
+RUN wget https://repo.continuum.io/miniconda/Miniconda3-latest-MacOSX-x86_64.sh
+
+RUN cd /opt;\
+    wget http://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh;\
+    chmod +x miniconda.sh;\
+    ./miniconda.sh -p /opt/miniconda -b
+
+# Use python 3 from conda
+ENV PATH="/opt/miniconda/bin:$PATH"
 
 COPY . /opt/CONCOCT
 
