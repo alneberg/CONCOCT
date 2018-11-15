@@ -1452,6 +1452,17 @@ double calcVBL(t_Cluster* ptCluster)
   return dRet;
 }
 
+void writePi(double *adPi, t_Cluster *ptCluster)
+{
+  int i = 0, nK = ptCluster->nK;
+
+  for(i = 0; i < nK; i++){
+      fprintf(stderr,"%f,",adPi[i]);
+  }
+  fprintf(stderr, "\n");
+  fflush(stderr);
+}
+
 void calcZ(t_Cluster* ptCluster, t_Data *ptData){
     double **aadX = ptData->aadX, **aadZ = ptCluster->aadZ;
     int i = 0, k = 0, l = 0;
@@ -1512,6 +1523,8 @@ void calcZ(t_Cluster* ptCluster, t_Data *ptData){
             }
         }
     }
+
+    writePi(adPi, ptCluster);
 
     gsl_vector_free(ptRes);
     gsl_vector_free(ptDiff);
