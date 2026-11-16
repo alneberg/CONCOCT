@@ -27,7 +27,17 @@ Manual Installation
 
 The conda installation should be enough for most users.
 However, if you want to modify the source code, a manual installation might be needed.
-An example of a manual installation on an Ubuntu system can be seen in the `Travis CI config file <https://github.com/BinPro/CONCOCT/blob/develop/.travis.yml>`_.
+CONCOCT requires Python 3.9 or later, a C compiler with OpenMP support and the `GNU Scientific Library <https://www.gnu.org/software/gsl/>`_.
+On a Debian or Ubuntu system, a manual installation can be done using:
+
+::
+
+    sudo apt-get install build-essential libgsl-dev samtools
+    git clone https://github.com/BinPro/CONCOCT.git
+    cd CONCOCT
+    pip install .
+
+To run the tests, install the test requirements and run pytest as shown in the `GitHub Actions config file <https://github.com/BinPro/CONCOCT/blob/develop/.github/workflows/tests.yml>`_.
 
 
 
@@ -49,7 +59,7 @@ To test concoct you can then do:
 ::
 
     $ cd /opt/CONCOCT_latest
-    $ nosetests
+    $ pytest
 
 Which should execute all tests without errors.
 

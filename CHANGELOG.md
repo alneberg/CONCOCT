@@ -3,6 +3,23 @@
 A list of changes per version.
 When changing something in the develop branch, it should be added here.
 
+## [Unreleased]
+
+### `Changed`
+
+ - Python 2 is no longer supported, Python 3.9 or later is required
+ - The tests are now run with pytest instead of the unmaintained nose
+ - Continuous integration is moved from Travis CI to GitHub Actions
+ - The build requirements (cython and numpy) are declared in `pyproject.toml` so that `pip install .` works in a clean environment
+
+### `Fixed`
+
+ - [#321](https://github.com/BinPro/CONCOCT/issues/321) - `TypeError: Feature names are only supported if all input features have string names` with scikit-learn >= 1.2
+ - `ModuleNotFoundError: No module named 'pkg_resources'` with recent setuptools versions
+ - `nose` is no longer an install requirement
+ - `extract_scg_bins.py` works with pandas >= 1.0
+ - The Dockerfile builds again
+
 ## [v1.1.0] 2019-08-02
 
 ### `Changed`
