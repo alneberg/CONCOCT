@@ -15,7 +15,8 @@ def main(args):
     all_seqs = {}
     for i, seq in enumerate(SeqIO.parse(args.fasta_file, "fasta")):
         all_seqs[seq.id] = seq
-    df = pd.read_csv(args.cluster_file)
+    # Contig ids consisting of digits only should still be read as strings
+    df = pd.read_csv(args.cluster_file, dtype={'contig_id': str})
     try:
         assert df.columns[0] == 'contig_id'
         assert df.columns[1] == 'cluster_id'
@@ -23,9 +24,18 @@ def main(args):
         sys.stderr.write("ERROR! Header line was not 'contig_id, cluster_id', please adjust your input file. Exiting!\n")
         sys.exit(-1)
 
+    missing = [contig_id for contig_id in df['contig_id'] if contig_id not in all_seqs]
+    if missing:
+        sys.stderr.write("ERROR! {} out of {} contigs in the cluster file are not present in the fasta file, for example '{}'.\n".format(
+            len(missing), len(df), missing[0]))
+        if 'concoct_part_' in missing[0]:
+            sys.stderr.write("The cluster file seems to contain cut up contigs. Either run merge_cutup_clustering.py on the "
+                "cluster file first or use the cut up fasta file as input.\n")
+        sys.exit(-1)
+
     cluster_to_contigs = defaultdict(list)
-    for i, row in df.iterrows():
-        cluster_to_contigs[row['cluster_id']].append(row['contig_id'])
+    for contig_id, cluster_id in zip(df['contig_id'], df['cluster_id']):
+        cluster_to_contigs[cluster_id].append(contig_id)
     
     for cluster_id, contig_ids in cluster_to_contigs.items():
         output_file = os.path.join(args.output_path, "{0}.fa".format(cluster_id))

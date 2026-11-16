@@ -79,7 +79,10 @@ def load_composition(comp_file, kmer_len, threshold):
 
 def load_coverage(cov_file, contig_lengths, no_cov_normalization, add_total_coverage=False, read_length=100):
     #Coverage import, file has header and contig ids as index
-    cov = p.read_table(cov_file, header=0, index_col=0)
+    # The contig ids are read as strings to match the ids of the composition
+    # file also when they consist of digits only.
+    id_column = p.read_table(cov_file, header=0, nrows=0).columns[0]
+    cov = p.read_table(cov_file, header=0, index_col=0, dtype={id_column: str})
 
     cov = cov[cov.index.isin(contig_lengths.index)]
 

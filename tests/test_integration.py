@@ -305,6 +305,36 @@ class TestCMD(unittest.TestCase):
         if isfile(conf_file):
             os.remove(conf_file)
 
+    def test_numeric_contig_ids(self):
+        """Contig ids consisting of digits only should not be read as integers"""
+        cov_file = os.path.join(tmp_dir_path, 'numeric_coverage')
+        comp_file = os.path.join(tmp_dir_path, 'numeric_composition.fa')
+        new_ids = {}
+        with open(os.path.join(test_dir_path, 'test_data', 'composition.fa')) as ifh, open(comp_file, 'w') as ofh:
+            for line in ifh:
+                if line.startswith('>'):
+                    contig_id = line[1:].split()[0]
+                    new_ids[contig_id] = "{:04d}".format(len(new_ids))
+                    line = ">{}\n".format(new_ids[contig_id])
+                ofh.write(line)
+        with open(os.path.join(test_dir_path, 'test_data', 'coverage')) as ifh, open(cov_file, 'w') as ofh:
+            ofh.write(ifh.readline())
+            for line in ifh:
+                contig_id, rest = line.split('\t', 1)
+                ofh.write("{}\t{}".format(new_ids[contig_id], rest))
+
+        self.run_command()
+        expected = p.read_csv(tmp_basename_dir+'/clustering_gt1000.csv')
+
+        self.run_command(cov_file='../tmp_output/numeric_coverage',
+                         comp_file='../tmp_output/numeric_composition.fa',
+                         basename=tmp_basename_dir2+'/')
+        self.assertEqual(self.c, 0,
+                     msg = "Command exited with nonzero status")
+        observed = p.read_csv(tmp_basename_dir2+'/clustering_gt1000.csv', dtype={'contig_id': str})
+        self.assertEqual(list(observed.contig_id), [new_ids[c] for c in expected.contig_id])
+        self.assertEqual(list(observed.cluster_id), list(expected.cluster_id))
+
     def test_one_contig_threshold(self):
         """Make sure we don't execute clustering of 0 or 1 contig"""
         # Make sure the error code is not set before running command
