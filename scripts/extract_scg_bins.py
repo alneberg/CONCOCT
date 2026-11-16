@@ -57,7 +57,7 @@ def write_approved_bins(app_binsdf, fasta_file, output_folder, prefix):
     # print approved bins
     dir_utils.mkdir_p(output_folder)
     for bin_id, contigs in app_binsdf.loc[:, ["Cluster",
-            "Contigs"]].as_matrix():
+            "Contigs"]].values:
         contig_ids = contigs.split("|")
         out_file = ospj(output_folder,
                 "{prefix}_bin{bin_id}.fa".format(bin_id=bin_id, prefix=prefix))

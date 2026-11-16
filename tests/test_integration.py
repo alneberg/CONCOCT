@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-from nose.tools import assert_equal, assert_true, assert_almost_equal, nottest, assert_false
+import unittest
 from os.path import isdir,isfile
 from os import listdir
 import os
@@ -9,14 +9,14 @@ import pandas as p
 
 file_path = os.path.realpath(__file__)
 test_dir_path = os.path.dirname(file_path)
-tmp_dir_path = test_dir_path + '/nose_tmp_output'
+tmp_dir_path = test_dir_path + '/tmp_output'
 tmp_basename_dir = tmp_dir_path + '/1'
 tmp_basename_dir2 = tmp_dir_path + '/2'
 tmp_basename_file = tmp_dir_path + '/file'
 
 CWD = os.getcwd()
 
-class TestCMD(object):
+class TestCMD(unittest.TestCase):
     def setUp(self):
         """Create temporary dir if necessary,
         otherwise clear contents of it"""
@@ -41,7 +41,7 @@ class TestCMD(object):
 
 
     def run_command(self,cov_file='coverage',comp_file='composition.fa',
-                    tags=[],basename='nose_tmp_output/1'):
+                    tags=[],basename='tmp_output/1'):
         call_string = "concoct --coverage_file test_data/{0} --composition_file test_data/{1} --basename {2} -c 10 --no_total_coverage 2> /dev/null".format(cov_file,comp_file,basename)
         for tag in tags:
             call_string += " " + tag
@@ -70,42 +70,42 @@ class TestCMD(object):
 
     def test_no_errors(self):
         self.run_command()
-        assert_equal(self.c,0,
+        self.assertEqual(self.c,0,
                      msg = "Command exited with nonzero status")
 
     def test_directory_creation(self):
         self.run_command()
-        assert_true(isdir(tmp_basename_dir),
+        self.assertTrue(isdir(tmp_basename_dir),
                     msg = "Temporary directory not created")
         m_time_first = os.path.getmtime(tmp_basename_dir+'/clustering_gt1000.csv')
 
         # Rerun the concoct and see that the directory is overwritten
         self.run_command()
         m_time_second = os.path.getmtime(tmp_basename_dir+'/clustering_gt1000.csv')
-        assert_true(m_time_first != m_time_second,
+        self.assertTrue(m_time_first != m_time_second,
                      msg = "basename dir is not overwritten")
         L = listdir(tmp_dir_path)
-        assert_true(len(L) == 1,
+        self.assertTrue(len(L) == 1,
                     msg = "Multiple output directories or files was created")
 
         # File creation
         self.run_command(basename=tmp_basename_file)
-        assert_true(isfile(tmp_basename_file+'_clustering_gt1000.csv'),
+        self.assertTrue(isfile(tmp_basename_file+'_clustering_gt1000.csv'),
                     msg = "Clustering file is not created, when file is used as basename")
         L = listdir(tmp_basename_dir)
-        assert_true(len(L) == 6,
+        self.assertTrue(len(L) == 6,
                     msg = "Wrong number of output files, observed {0}".format(L))
 
     def test_prior_to_clustering(self):
         self.run_command()
         d_p = os.path.join(tmp_basename_dir)
-        assert_true(isfile(d_p+ '/args.txt'),
+        self.assertTrue(isfile(d_p+ '/args.txt'),
                            msg="Args file is not created")
-        assert_true(isfile(d_p+ '/log.txt'),
+        self.assertTrue(isfile(d_p+ '/log.txt'),
                            msg="Log file is not created")
-        assert_true(isfile(d_p+ '/original_data_gt1000.csv'),
+        self.assertTrue(isfile(d_p+ '/original_data_gt1000.csv'),
                            msg="Original data file is not created")
-        assert_true(isfile(d_p+ '/PCA_transformed_data_gt1000.csv'),
+        self.assertTrue(isfile(d_p+ '/PCA_transformed_data_gt1000.csv'),
                            msg="PCA transformed data file is not created")
 
 
@@ -113,38 +113,38 @@ class TestCMD(object):
         # dir as basename
         self.run_command()
         d_p = os.path.join(tmp_basename_dir)
-        assert_true(
+        self.assertTrue(
             isfile(d_p+ '/clustering_gt1000.csv'),
             msg='Large contigs clustering file is not created'
             )
-        assert_true(
+        self.assertTrue(
             isfile(d_p+ '/PCA_transformed_data_gt1000.csv'),
             msg='PCA file is not created'
             )
-        assert_true(
+        self.assertTrue(
             isfile(d_p+ '/original_data_gt1000.csv'),
             msg='Original data file is not created'
             )
-        assert_true(
+        self.assertTrue(
             isfile(d_p+ '/log.txt'),
             msg='Log file is not created'
             )
         # dir as file
         self.run_command(basename=tmp_basename_file)
         d_p = tmp_basename_file +'_'
-        assert_true(
+        self.assertTrue(
             isfile(d_p+ 'clustering_gt1000.csv'),
             msg='Large contigs clustering file is not created'
             )
-        assert_true(
+        self.assertTrue(
             isfile(d_p+ 'PCA_transformed_data_gt1000.csv'),
             msg='PCA file is not created'
             )
-        assert_true(
+        self.assertTrue(
             isfile(d_p+ 'original_data_gt1000.csv'),
             msg='Original data file is not created'
             )
-        assert_true(
+        self.assertTrue(
             isfile(d_p+ 'log.txt'),
             msg='Log file is not created'
             )
@@ -165,16 +165,16 @@ class TestCMD(object):
         odl_2 = self.file_len(od_2)
         clust_gtl_2= self.file_len(clust_gt_2)
 
-        assert_true(odl_1!=odl_2,
+        self.assertTrue(odl_1!=odl_2,
                     msg='Original data have the same lengths')
-        assert_true(clust_gtl_1!=clust_gtl_2,
+        self.assertTrue(clust_gtl_1!=clust_gtl_2,
                     msg='Filtered clustering files have the same lengths')
 
     def test_logging(self):
         self.run_command()
         with open(tmp_basename_dir+'/log.txt','r') as log:
             log_content = log.read()
-            assert_true(len(log_content)>10,
+            self.assertTrue(len(log_content)>10,
                         "Log content is too small")
             pca_report = [row for row in log_content.split('\n') if 'Performed PCA, resulted in ' in row][0]
             pca_dimensions_log = int(pca_report.split()[-2])
@@ -183,7 +183,7 @@ class TestCMD(object):
                 header = header.strip()
                 last_dim = int(header.split(',')[-1])
                 pca_dimensions = last_dim + 1
-            assert_equal(pca_dimensions, pca_dimensions_log)
+            self.assertEqual(pca_dimensions, pca_dimensions_log)
 
     def test_seed(self):
         #Test default behaviour, seed = 11
@@ -196,9 +196,9 @@ class TestCMD(object):
         second_time = os.path.getmtime(tmp_basename_dir+'/clustering_gt1000.csv')
         with open(tmp_basename_dir+'/clustering_gt1000.csv','r') as clustering:
             second_file=clustering.read()
-        assert_true(not (first_time==second_time),
+        self.assertTrue(not (first_time==second_time),
                     msg='clustering_gt1000.csv did not change')
-        assert_true(first_file == second_file,
+        self.assertTrue(first_file == second_file,
                     msg='Clustering outcomes were not the same with same seeds')
 
         #Should be equal to both above since default seed is 1
@@ -206,9 +206,9 @@ class TestCMD(object):
         first_time = os.path.getmtime(tmp_basename_dir+'/clustering_gt1000.csv')
         with open(tmp_basename_dir+'/clustering_gt1000.csv','r') as clustering:
             first_file=clustering.read()
-        assert_true(not (first_time==second_time),
+        self.assertTrue(not (first_time==second_time),
                     msg='clustering_gt1000.csv did not change')
-        assert_true(first_file == second_file,
+        self.assertTrue(first_file == second_file,
                     msg='Clustering outcomes were not the same with same seeds')
 
         #Test that 0 gives different seed
@@ -223,9 +223,9 @@ class TestCMD(object):
         second_time = os.path.getmtime(tmp_basename_dir+'/clustering_gt1000.csv')
         with open(tmp_basename_dir+'/clustering_gt1000.csv','r') as clustering:
             second_file=clustering.read()
-        assert_true(not (first_time==second_time),
+        self.assertTrue(not (first_time==second_time),
                     msg='clustering_gt1000.csv did not change')
-        assert_true(not (first_file == second_file),
+        self.assertTrue(not (first_file == second_file),
                     msg='Clustering outcomes were the same with random seeds')
 
 
@@ -241,9 +241,9 @@ class TestCMD(object):
         second_time = os.path.getmtime(tmp_basename_dir+'/clustering_gt1000.csv')
         with open(tmp_basename_dir+'/clustering_gt1000.csv','r') as clustering:
             second_file=clustering.read()
-        assert_true(not (first_time==second_time),
+        self.assertTrue(not (first_time==second_time),
                     msg='clustering_gt1000.csv did not change')
-        assert_true(not (first_file == second_file),
+        self.assertTrue(not (first_file == second_file),
                     msg='Clustering outcomes were the same with different seeds')
 
     def test_log_coverage(self):
@@ -252,8 +252,8 @@ class TestCMD(object):
         df = p.io.parsers.read_csv(original_coverage_data_path,index_col=0,sep=',')
 
         true_pseudo_cov = -1.3143
-        calc_pseudo_cov = df.sample_1[0]
-        assert_almost_equal(true_pseudo_cov,calc_pseudo_cov,places=4)
+        calc_pseudo_cov = df.sample_1.iloc[0]
+        self.assertAlmostEqual(true_pseudo_cov,calc_pseudo_cov,places=4)
 
     def test_log_coverage_no_cov_normalization(self):
         self.run_command(tags=["--no_cov_normalization"])
@@ -261,8 +261,8 @@ class TestCMD(object):
         df = p.io.parsers.read_csv(original_coverage_data_path,index_col=0,sep=',')
 
         true_pseudo_cov = -1.8107
-        calc_pseudo_cov = df.sample_1[0]
-        assert_almost_equal(true_pseudo_cov,calc_pseudo_cov,places=4)
+        calc_pseudo_cov = df.sample_1.iloc[0]
+        self.assertAlmostEqual(true_pseudo_cov,calc_pseudo_cov,places=4)
 
 
     def test_big_file_validation(self):
@@ -278,9 +278,9 @@ class TestCMD(object):
         clustering_file = os.path.join(tmp_dir_path,'large_contigs',
                                        'clustering_gt1000.csv')
 
-        assert_true(isfile(validate_path))
-        assert_true(isfile(clustering_reference))
-        assert_true(isfile(clustering_file))
+        self.assertTrue(isfile(validate_path))
+        self.assertTrue(isfile(clustering_reference))
+        self.assertTrue(isfile(clustering_file))
         validate_so = subprocess.check_output(['perl', validate_path,
                                                '--sfile={}'.format(clustering_reference),
                                                '--cfile={}'.format(clustering_file) ])
@@ -291,13 +291,13 @@ class TestCMD(object):
         stats = validate_so.split(b'\n')[1].split(b'\t')
         stats_dict = dict(list(zip(headers, stats)))
 
-        assert_true(float(stats_dict[b'AdjRand']) > 0.85,
+        self.assertTrue(float(stats_dict[b'AdjRand']) > 0.85,
                     msg=("Insufficient adjusted rand index "
                          "reached, requires > 0.85"))
-        assert_true(float(stats_dict[b'Prec.']) > 0.95,
+        self.assertTrue(float(stats_dict[b'Prec.']) > 0.95,
                     msg=("Insufficient precision reached, "
                          "requires > /0.95"))
-        assert_true(float(stats_dict[b'Rec.']) > 0.90,
+        self.assertTrue(float(stats_dict[b'Rec.']) > 0.90,
                     msg=("Insufficient recall reached, "
                          "requires > 0.90"))
 
@@ -308,9 +308,9 @@ class TestCMD(object):
     def test_one_contig_threshold(self):
         """Make sure we don't execute clustering of 0 or 1 contig"""
         # Make sure the error code is not set before running command
-        assert_false(hasattr(self,"c"))
+        self.assertFalse(hasattr(self,"c"))
         # Longest contig is 33356 so we put the threshold just below
         self.run_command(tags=["--length_threshold 33350"])
         # The command should have failed with code 255
-        assert_true(hasattr(self,"c"))
-        assert_equal(self.c,255)
+        self.assertTrue(hasattr(self,"c"))
+        self.assertEqual(self.c,255)

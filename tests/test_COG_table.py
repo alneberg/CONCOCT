@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-from nose.tools import assert_equal, assert_true, assert_almost_equal, nottest
+import unittest
 from os.path import isdir,isfile
 from os import listdir
 import os
@@ -11,13 +11,13 @@ import hashlib
 file_path = os.path.realpath(__file__)
 data_path = os.path.abspath(os.path.join(file_path,"..","..","data/"))
 test_dir_path = os.path.dirname(file_path)
-tmp_dir_path = test_dir_path + '/nose_tmp_output'
+tmp_dir_path = test_dir_path + '/tmp_output'
 tmp_basename_dir = tmp_dir_path + '/1'
 script_path = os.path.join(test_dir_path, '..', 'scripts', 'COG_table.py')
 
 CWD = os.getcwd()
 
-class TestCMD(object):
+class TestCMD(unittest.TestCase):
     def setUp(self):
         """Create temporary dir if necessary,
         otherwise clear contents of it"""
@@ -92,23 +92,23 @@ class TestCMD(object):
  
     def test_without_gff(self):
         self.run_command()
-        assert_equal(self.c, 0,
+        self.assertEqual(self.c, 0,
                      msg = "Command exited with nonzero status")
 
         new_output = self.md5sum(os.path.join(tmp_dir_path, 'cog_table_output.csv'))
         old_output = self.md5sum(os.path.join(test_dir_path, 'test_data', 'prodigal_example', 'prodigal_reference_out.tsv'))
         
-        assert_equal(new_output, old_output,
+        self.assertEqual(new_output, old_output,
                 msg = "Output not the same as reference")
 
     def test_with_gff(self):
         self.run_command(cluster_file = 'prokka_example/clustering_gt1000.csv',
                 blastoutfile = 'prokka_example/prokka_rpsblast.tsv',
                 gfffile = 'prokka_example/prokka.gff')
-        assert_equal(self.c, 0,
+        self.assertEqual(self.c, 0,
                 msg = "Command exited with nonzero status")
         new_output = self.md5sum(os.path.join(tmp_dir_path, 'cog_table_output.csv'))
         old_output = self.md5sum(os.path.join(test_dir_path, 'test_data', 'prokka_example', 'prokka_reference_out.tsv'))
-        assert_equal(new_output, old_output,
+        self.assertEqual(new_output, old_output,
                 msg = "Output not the same as reference")
 

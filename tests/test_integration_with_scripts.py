@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-from nose.tools import assert_equal, assert_true, assert_almost_equal, nottest, assert_false
+import unittest
 from os.path import isdir,isfile
 from os import listdir
 import os
@@ -11,11 +11,11 @@ import glob
 file_path = os.path.realpath(__file__)
 data_path = os.path.abspath(os.path.join(file_path, "..", "test_data", "integration_test_data"))
 test_dir_path = os.path.dirname(file_path)
-tmp_dir_path = test_dir_path + '/nose_tmp_output'
+tmp_dir_path = test_dir_path + '/tmp_output'
 
 CWD = os.getcwd()
 
-class TestCMD(object):
+class TestCMD(unittest.TestCase):
     def setUp(self):
         """Create temporary dir if necessary,
         otherwise clear contents of it"""
@@ -45,7 +45,7 @@ class TestCMD(object):
                         shell=True)
 
     def run_all(self, cov_file='coverage', comp_file='composition.fa',
-                    tags=[], basename='nose_tmp_output/1'):
+                    tags=[], basename='tmp_output/1'):
 
         original_contigs = os.path.join(data_path, "velvet_71.fa")
         contigs_bed = os.path.join(tmp_dir_path, "contigs.bed")
@@ -78,4 +78,4 @@ class TestCMD(object):
         self.run_all()
         fasta_bins_dir = os.path.join(tmp_dir_path, "fasta_bins")
         print(os.listdir(fasta_bins_dir))
-        assert_true(len(glob.glob(os.path.join(fasta_bins_dir, "*.fa"))) > 2, "Too few bins were created")
+        self.assertTrue(len(glob.glob(os.path.join(fasta_bins_dir, "*.fa"))) > 2, "Too few bins were created")

@@ -4,7 +4,7 @@ help:
 	@echo "clean-build - remove build artifacts"
 	@echo "clean-pyc - remove Python file artifacts"
 	@echo "lint - check style with flake8"
-	@echo "test - run tests with nosetests"
+	@echo "test - run tests with pytest"
 	@echo "docs - generate Sphinx HTML documentation, including API docs"
 	@echo "release - package and upload a release"
 	@echo "dist - package"
@@ -26,7 +26,7 @@ lint:
 	flake8 concoct bin tests
 
 test:
-	nosetests
+	pytest
 
 docs:
 	$(MAKE) -C doc clean

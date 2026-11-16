@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-from nose.tools import assert_equal, assert_true, assert_almost_equal, nottest
+import unittest
 from os.path import isdir,isfile
 from os import listdir
 import os
@@ -12,14 +12,14 @@ import re
 file_path = os.path.realpath(__file__)
 test_dir_path = os.path.dirname(file_path)
 data_path = os.path.abspath(os.path.join(test_dir_path,"test_data", "integration_test_data"))
-tmp_dir_path = os.path.join(test_dir_path, 'nose_tmp_output')
+tmp_dir_path = os.path.join(test_dir_path, 'tmp_output')
 script_path = os.path.join(test_dir_path, '..', 'scripts', 'merge_cutup_clustering.py')
 
 CWD = os.getcwd()
 
-CONTIG_PART_EXPR = re.compile("(.*)\.concoct_part_([0-9]*)")
+CONTIG_PART_EXPR = re.compile(r"(.*)\.concoct_part_([0-9]*)")
 
-class TestCMD(object):
+class TestCMD(unittest.TestCase):
     def setUp(self):
         """Create temporary dir if necessary,
         otherwise clear contents of it"""
@@ -85,15 +85,15 @@ class TestCMD(object):
                 if len(clusters_per_contig[contig_id]) > 1:
                     print(contig_id)
 
-        assert_equal(self.c, 0,
+        self.assertEqual(self.c, 0,
                      msg="Command exited with nonzero status")
 
-        assert_equal(self.file_len(output_file), 1+len(clusters_per_contig))
+        self.assertEqual(self.file_len(output_file), 1+len(clusters_per_contig))
         with open(output_file) as fhandle:
             for line in fhandle:
                 line = line.strip()
                 contig_id, cluster_id = line.split(',')
                 if len(clusters_per_contig[contig_id]) == 1:
-                    assert_true(cluster_id in clusters_per_contig[contig_id])
+                    self.assertTrue(cluster_id in clusters_per_contig[contig_id])
                 else:
                     print(contig_id)

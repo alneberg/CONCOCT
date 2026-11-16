@@ -1,12 +1,12 @@
 #!/usr/bin/env python
-from nose.tools import assert_equal, assert_true
+import unittest
 import numpy as np
 import pandas as p
 import os
 from Bio import SeqIO
 from concoct.input import _normalize_per_sample, _normalize_per_contig, generate_feature_mapping, load_composition, _calculate_composition
 
-class TestInput(object):
+class TestInput(unittest.TestCase):
     def setUp(self):
         self.C = p.DataFrame(np.array([[0., 0.7], [5.5, .7]]))
 
@@ -14,19 +14,19 @@ class TestInput(object):
         C_norm = _normalize_per_contig(self.C)
         
         C_correct = p.DataFrame(np.array([[0., 1.],[5.5/6.2, 0.7/6.2]]))
-        assert_true(np.linalg.norm(C_norm-C_correct) < 0.0001)
+        self.assertTrue(np.linalg.norm(C_norm-C_correct) < 0.0001)
 
     def test_normalize_per_samples(self):
         C_norm = _normalize_per_sample(self.C)
 
         C_correct = p.DataFrame(np.array([[0., 0.5],[1,0.5]]))
-        assert_true(np.linalg.norm(C_norm-C_correct) < 0.0001)
+        self.assertTrue(np.linalg.norm(C_norm-C_correct) < 0.0001)
 
     def test_generate_feature_mapping(self):
         feature_mapping, counter = generate_feature_mapping(2)
-        assert_equal(counter, 10)
-        assert_equal(len(list(feature_mapping.keys())), 16)
-        assert_true(('A', 'A') in feature_mapping)
+        self.assertEqual(counter, 10)
+        self.assertEqual(len(list(feature_mapping.keys())), 16)
+        self.assertTrue(('A', 'A') in feature_mapping)
 
     def test_load_composition(self):
         # Get the directory path of this test file
@@ -43,10 +43,10 @@ class TestInput(object):
         c_len = p.Series(lengths,index=ids,dtype=float)
         # Use load_composition to calculate contig lengths
         composition, contig_lengths = load_composition("{0}/test_data/composition_some_shortened.fa".format(f),4,1000)
-        assert_equal(len(c_len), len(contig_lengths))
+        self.assertEqual(len(c_len), len(contig_lengths))
         # All equal
         for ix in ids:
-            assert_equal(c_len.loc[ix], contig_lengths.loc[ix])
+            self.assertEqual(c_len.loc[ix], contig_lengths.loc[ix])
         
 
     def test__calculate_composition(self):
@@ -67,7 +67,7 @@ class TestInput(object):
 
         for seq_id, s in seq_strings.items():
             c = count_substrings(s, "".join(kmer_s))
-            assert_equal(composition.loc[seq_id, feature_mapping[kmer_s]], c+1)
+            self.assertEqual(composition.loc[seq_id, feature_mapping[kmer_s]], c+1)
 
         # Check that non palindromic kmers works as well:
         kmer_s = ('A', 'G', 'G', 'G')
@@ -75,7 +75,7 @@ class TestInput(object):
         for seq_id, s in seq_strings.items():
             c_1 = count_substrings(s, "".join(kmer_s))
             c_2 = count_substrings(s, "".join(reverse_kmer_s))
-            assert_equal(composition.loc[seq_id, feature_mapping[kmer_s]], c_1 + c_2 + 1)
+            self.assertEqual(composition.loc[seq_id, feature_mapping[kmer_s]], c_1 + c_2 + 1)
         
 
 def count_substrings(s, subs):

@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-from nose.tools import assert_equal, assert_true, assert_almost_equal, nottest
+import unittest
 from os.path import isdir,isfile
 from os import listdir
 import os
@@ -10,13 +10,13 @@ import pandas as pd
 file_path = os.path.realpath(__file__)
 test_dir_path = os.path.dirname(file_path)
 data_path = os.path.abspath(os.path.join(test_dir_path,"test_data","map"))
-tmp_dir_path = os.path.join(test_dir_path, 'nose_tmp_output')
+tmp_dir_path = os.path.join(test_dir_path, 'tmp_output')
 tmp_basename_dir = os.path.join(tmp_dir_path, '1')
 script_path = os.path.join(test_dir_path, '..', 'scripts', 'gen_input_table.py')
 
 CWD = os.getcwd()
 
-class TestCMD(object):
+class TestCMD(unittest.TestCase):
     def setUp(self):
         """Create temporary dir if necessary,
         otherwise clear contents of it"""
@@ -85,18 +85,18 @@ class TestCMD(object):
                 contigs_file = os.path.join(data_path, 'two_contigs.fa'),
                 output_file = os.path.join(tmp_dir_path, 'inputtable.tsv'),
                 sample_names = os.path.join(data_path, 'sample_names'))
-        assert_equal(self.c, 0,
+        self.assertEqual(self.c, 0,
                      msg = "Command exited with nonzero status")
         
         new_output =  os.path.join(tmp_dir_path, 'inputtable.tsv')
         df = pd.read_csv(new_output, sep='\t', index_col=0)
-        assert_almost_equal(df['cov_mean_sample_ten_reads'].loc['contig-75000034'], 10*100.0/1615, 5)
-        assert_almost_equal(df['cov_mean_sample_ten_reads'].loc['contig-21000001'], 10*100.0/9998, 5)
-        assert_almost_equal(df['cov_mean_sample_twenty_reads'].loc['contig-75000034'], 20*100.0/1615, 5)
-        assert_almost_equal(df['cov_mean_sample_twenty_reads'].loc['contig-21000001'], 20*100.0/9998, 5)
+        self.assertAlmostEqual(df['cov_mean_sample_ten_reads'].loc['contig-75000034'], 10*100.0/1615, 5)
+        self.assertAlmostEqual(df['cov_mean_sample_ten_reads'].loc['contig-21000001'], 10*100.0/9998, 5)
+        self.assertAlmostEqual(df['cov_mean_sample_twenty_reads'].loc['contig-75000034'], 20*100.0/1615, 5)
+        self.assertAlmostEqual(df['cov_mean_sample_twenty_reads'].loc['contig-21000001'], 20*100.0/9998, 5)
 
             
-        #assert_equal(new_output, old_output,
+        #self.assertEqual(new_output, old_output,
         #        msg = "Output not the same as reference")
 
     def test_with_bedfiles(self):
@@ -106,13 +106,13 @@ class TestCMD(object):
                 contigs_file = os.path.join(data_path, 'two_contigs.fa'),
                 output_file = os.path.join(tmp_dir_path, 'inputtable.tsv'),
                 sample_names = os.path.join(data_path, 'sample_names'))
-        assert_equal(self.c, 0,
+        self.assertEqual(self.c, 0,
                      msg = "Command exited with nonzero status")
         
         new_output =  os.path.join(tmp_dir_path, 'inputtable.tsv')
         df = pd.read_csv(new_output, sep='\t', index_col=0)
-        assert_almost_equal(df['cov_mean_sample_ten_reads'].loc['contig-75000034'], 10*100.0/1615, 5)
-        assert_almost_equal(df['cov_mean_sample_ten_reads'].loc['contig-21000001'], 10*100.0/9998, 5)
-        assert_almost_equal(df['cov_mean_sample_twenty_reads'].loc['contig-75000034'], 20*100.0/1615, 5)
-        assert_almost_equal(df['cov_mean_sample_twenty_reads'].loc['contig-21000001'], 20*100.0/9998, 5)
+        self.assertAlmostEqual(df['cov_mean_sample_ten_reads'].loc['contig-75000034'], 10*100.0/1615, 5)
+        self.assertAlmostEqual(df['cov_mean_sample_ten_reads'].loc['contig-21000001'], 10*100.0/9998, 5)
+        self.assertAlmostEqual(df['cov_mean_sample_twenty_reads'].loc['contig-75000034'], 20*100.0/1615, 5)
+        self.assertAlmostEqual(df['cov_mean_sample_twenty_reads'].loc['contig-21000001'], 20*100.0/9998, 5)
 

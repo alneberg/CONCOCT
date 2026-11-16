@@ -8,7 +8,7 @@ def pca_signatures(signature_file):
     contigs = pd.read_csv(signature_file,header=0,index_col=0)
     #add pseudo count
     contigs_idx = contigs.index
-    contigs = contigs.as_matrix()
+    contigs = contigs.values
     contigs += 1
     log_contigs = np.log(contigs / contigs.sum(axis=1,keepdims=True))
     print((log_contigs > 0).any())

@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-from nose.tools import assert_equal, assert_true, assert_almost_equal, nottest
+import unittest
 from os.path import isdir,isfile
 from os import listdir
 import os
@@ -12,15 +12,15 @@ import re
 file_path = os.path.realpath(__file__)
 test_dir_path = os.path.dirname(file_path)
 data_path = os.path.abspath(os.path.join(test_dir_path,"test_data"))
-tmp_dir_path = os.path.join(test_dir_path, 'nose_tmp_output')
+tmp_dir_path = os.path.join(test_dir_path, 'tmp_output')
 tmp_basename_dir = os.path.join(tmp_dir_path, '1')
 script_path = os.path.join(test_dir_path, '..', 'scripts', 'cut_up_fasta.py')
 
 CWD = os.getcwd()
 
-CONTIG_PART_EXPR = re.compile("(.*)\.concoct_part_([0-9]*)")
+CONTIG_PART_EXPR = re.compile(r"(.*)\.concoct_part_([0-9]*)")
 
-class TestCMD(object):
+class TestCMD(unittest.TestCase):
     def setUp(self):
         """Create temporary dir if necessary,
         otherwise clear contents of it"""
@@ -84,7 +84,7 @@ class TestCMD(object):
                 bedfile=None,
                 output_file=output_file)
 
-        assert_equal(self.c, 0,
+        self.assertEqual(self.c, 0,
                      msg = "Command exited with nonzero status")
 
         result_dict = {}
@@ -94,20 +94,20 @@ class TestCMD(object):
 
         with open(output_file) as fhandle:
             for rec in SeqIO.parse(fhandle, "fasta"):
-                assert_true(".concoct_part_" in rec.id)
+                self.assertTrue(".concoct_part_" in rec.id)
                 original_id, part_nr = CONTIG_PART_EXPR.match(rec.id).group(1,2)
-                assert_true(".concoct_part_" not in original_id)
+                self.assertTrue(".concoct_part_" not in original_id)
                 nr_parts_per_original[original_id] += 1
                 part_lengths_per_original[original_id] += len(rec.seq)
-                assert_true((len(rec.seq) == 200) or (len(rec.seq) > 200 and len(rec.seq) < 400))
+                self.assertTrue((len(rec.seq) == 200) or (len(rec.seq) > 200 and len(rec.seq) < 400))
 
                 reconstructed_original[original_id] += str(rec.seq)
 
         with open(contigs_file) as fhandle:
             for rec in SeqIO.parse(fhandle, "fasta"):
-                assert_true(rec.id in reconstructed_original.keys())
-                assert_equal(str(rec.seq), reconstructed_original[rec.id])
-                assert_equal(int(len(rec.seq) / 200), \
+                self.assertTrue(rec.id in reconstructed_original.keys())
+                self.assertEqual(str(rec.seq), reconstructed_original[rec.id])
+                self.assertEqual(int(len(rec.seq) / 200), \
                              nr_parts_per_original[rec.id])
 
 

@@ -1,15 +1,16 @@
 import sys
 import os
 from os.path import join as ospj
-from nose.tools import ok_, assert_equal
+import unittest
 import numpy as np
 
 import concoct.utils.dir_utils as dir_utils
+from concoct.utils.check_dependencies import which
 
 FILE_PATH = os.path.realpath(__file__)
 TEST_DIR_PATH = os.path.dirname(FILE_PATH)
 DATA_PATH = os.path.abspath(ospj(TEST_DIR_PATH, "test_data", "bins"))
-TMP_DIR_PATH = ospj(TEST_DIR_PATH, 'nose_tmp_output')
+TMP_DIR_PATH = ospj(TEST_DIR_PATH, 'tmp_output')
 TMP_BASENAME_DIR = ospj(TMP_DIR_PATH, 'dnadiff')
 SCRIPT_PATH = ospj(TEST_DIR_PATH, '..')
 
@@ -20,7 +21,8 @@ import dnadiff_dist_matrix
 CWD = os.getcwd()
 
 
-class TestDnaDiff(object):
+@unittest.skipUnless(which("dnadiff"), "dnadiff (MUMmer) is not installed")
+class TestDnaDiff(unittest.TestCase):
     def setUp(self):
         """Delete temporary dir if it exists then create it"""
         self.tearDown()
@@ -35,7 +37,7 @@ class TestDnaDiff(object):
         dnadiff_dist_matrix.run_dnadiff(ospj(DATA_PATH,
             "sample0_gt1000_bin0.fa"), ospj(DATA_PATH,
                 "sample0_gt1000_bin1.fa"), ospj(TMP_BASENAME_DIR, "out"))
-        ok_(os.path.exists(ospj(TMP_BASENAME_DIR, "out.report")))
+        self.assertTrue(os.path.exists(ospj(TMP_BASENAME_DIR, "out.report")))
 
     def test_run_dnadiff_pairwise(self):
         """Test dnadiff pairwise on multiple bins"""
@@ -50,7 +52,7 @@ class TestDnaDiff(object):
                 "{}_vs_{}".format(names[i], names[j]), "out.report")
                 for i in range(len(names))
                 for j in range(i + 1, len(names))]:
-            ok_(os.path.exists(f))
+            self.assertTrue(os.path.exists(f))
 
     def test_parallel_run_dnadiff_pairwise(self):
         """Test dnadiff pairwise on multiple bins"""
@@ -65,21 +67,21 @@ class TestDnaDiff(object):
                 "{}_vs_{}".format(names[i], names[j]), "out.report")
                 for i in range(len(names))
                 for j in range(i + 1, len(names))]:
-            ok_(os.path.exists(f))
+            self.assertTrue(os.path.exists(f))
 
     def test_mummer_report_class(self):
         """Test mummer report class"""
         dnadiff_dist_matrix.run_dnadiff(ospj(DATA_PATH,
             "sample0_gt1000_bin0.fa"), ospj(DATA_PATH,
                 "sample0_gt1000_bin1.fa"), ospj(TMP_BASENAME_DIR, "out"))
-        ok_(os.path.exists(ospj(TMP_BASENAME_DIR, "out.report")))
+        self.assertTrue(os.path.exists(ospj(TMP_BASENAME_DIR, "out.report")))
 
         mumr = dnadiff_dist_matrix.MUMmerReport(ospj(TMP_BASENAME_DIR,
             "out.report"))
-        assert_equal(mumr.tot_bases[0], 3213)
-        assert_equal(mumr.tot_bases[1], 43514)
-        assert_equal(mumr.aligned_bases[0], 0)
-        assert_equal(mumr.aligned_bases[1], 0)
+        self.assertEqual(mumr.tot_bases[0], 3213)
+        self.assertEqual(mumr.tot_bases[1], 43514)
+        self.assertEqual(mumr.aligned_bases[0], 0)
+        self.assertEqual(mumr.aligned_bases[1], 0)
 
     def test_get_dist_matrix(self):
         """Test dnadiff pairwise on multiple bins and get the resulting
@@ -102,7 +104,7 @@ class TestDnaDiff(object):
                 "{}_vs_{}".format(names[i], names[j]), "out.report")
                 for i in range(len(names))
                 for j in range(i + 1, len(names))]:
-            ok_(os.path.exists(f))
+            self.assertTrue(os.path.exists(f))
 
         matrix = dnadiff_dist_matrix.get_dist_matrix(TMP_BASENAME_DIR, names,
                 50)
@@ -129,9 +131,9 @@ class TestDnaDiff(object):
         clustering = ospj(TMP_BASENAME_DIR, "clustering.tsv")
         clustering_threshold = 0.05
         dnadiff_dist_matrix.plot_dist_matrix(matrix, names, heatmap, dendrogram, clustering_threshold, clustering)
-        ok_(os.path.exists(heatmap))
-        ok_(os.path.exists(dendrogram))
-        ok_(os.path.exists(clustering))
+        self.assertTrue(os.path.exists(heatmap))
+        self.assertTrue(os.path.exists(dendrogram))
+        self.assertTrue(os.path.exists(clustering))
 
     def test_plot_dist_matrix_88_bins(self):
         """Plot a distance matrix with 88 samples"""
@@ -145,9 +147,9 @@ class TestDnaDiff(object):
         clustering = ospj(TMP_BASENAME_DIR, "clustering.tsv")
         clustering_threshold = 0.05
         dnadiff_dist_matrix.plot_dist_matrix(matrix, names, heatmap, dendrogram, clustering_threshold, clustering)
-        ok_(os.path.exists(heatmap))
-        ok_(os.path.exists(dendrogram))
-        ok_(os.path.exists(clustering))
+        self.assertTrue(os.path.exists(heatmap))
+        self.assertTrue(os.path.exists(dendrogram))
+        self.assertTrue(os.path.exists(clustering))
 
     def test_write_fasta_names(self):
         names = [
@@ -163,4 +165,4 @@ class TestDnaDiff(object):
         files = [ospj(DATA_PATH, "{}.fa".format(n)) for n in names]
         dnadiff_dist_matrix.write_fasta_names(names, files,
                 ospj(TMP_BASENAME_DIR, "fasta_names.tsv"), "\t")
-        ok_(os.path.exists(ospj(TMP_BASENAME_DIR, "fasta_names.tsv")))
+        self.assertTrue(os.path.exists(ospj(TMP_BASENAME_DIR, "fasta_names.tsv")))
