@@ -72,7 +72,6 @@ int driverMP(double *adX, int nN, int nD, int *anAssign, int nKStart, unsigned l
     /*set OMP thread number*/
     nNthreads = nThreads;
     nT = nN / 32  + 1;
-    printf("%d %d %d\n",nN,nT,nNthreads);
     if (nT < nNthreads){
         nNthreads = nT;
     }
@@ -1243,7 +1242,7 @@ double dWishartExpectLogDet(gsl_matrix *ptW, double dNu, int nD)
 
   gsl_matrix_memcpy(ptTemp, ptW);
 
-  dLogDet = decomposeMatrix(ptW, nD);
+  dLogDet = decomposeMatrix(ptTemp, nD);
 
   dRet = dD*log(2.0) + dLogDet;
 
