@@ -14,6 +14,7 @@ import os
 import argparse
 import subprocess
 import glob
+from io import StringIO
 from signal import signal, SIGPIPE, SIG_DFL
 import pandas as pd
 
@@ -30,17 +31,71 @@ def check_bed_file_for_errors(bedfile):
                 "Perhaps 'concoct_part_' is misplaced or missing? Exiting!\n").format(line))
                 sys.exit(-1)
 
+def exit_with_error(msg):
+    sys.stderr.write("ERROR! {}\n".format(msg))
+    sys.exit(-1)
+
+def run_samtools(args):
+    """Runs samtools with args and returns the returncode and stdout as a string."""
+    try:
+        p = subprocess.Popen(["samtools"] + args, stdout=subprocess.PIPE)
+    except OSError:
+        exit_with_error("Could not run samtools. Please make sure samtools is installed and available in your PATH.")
+    out, _ = p.communicate()
+    return p.returncode, out.decode('utf-8')
+
+def get_bam_contigs(bamfile):
+    """Returns the ids of the contigs in the header of bamfile, in order."""
+    returncode, out = run_samtools(["view", "-H", bamfile])
+    if returncode != 0:
+        exit_with_error("Could not read the header of '{}', see the samtools error message above.".format(bamfile))
+    contigs = []
+    for line in out.splitlines():
+        if line.startswith('@SQ'):
+            for field in line.split('\t')[1:]:
+                if field.startswith('SN:'):
+                    contigs.append(field[3:])
+    return contigs
+
+def check_bam_files_for_errors(bedfile, bamfiles):
+    """samtools bedcov looks up the contigs using the header of the first
+    bamfile only. Contigs missing from the header are skipped and bamfiles
+    with a different contig order silently get the coverage of the wrong
+    contigs, so make sure this is not the case before running it."""
+    with open(bedfile) as ifh:
+        bed_contigs = set(line.split('\t')[0] for line in ifh if line.strip())
+
+    first_bam_contigs = None
+    for bamfile in bamfiles:
+        bam_contigs = get_bam_contigs(bamfile)
+        missing = bed_contigs.difference(bam_contigs)
+        if missing:
+            exit_with_error(("{} out of {} contigs in '{}' are not present in the header of '{}', for example '{}'. "
+                "Were the reads mapped against the same fasta file that was given to cut_up_fasta.py?").format(
+                    len(missing), len(bed_contigs), bedfile, bamfile, sorted(missing)[0]))
+        if first_bam_contigs is None:
+            first_bam_contigs = bam_contigs
+        elif bam_contigs != first_bam_contigs:
+            exit_with_error(("The contigs in the headers of '{}' and '{}' are not identical and in the same order. "
+                "All bamfiles need to be mapped against the same fasta file.").format(bamfiles[0], bamfile))
+
+def has_index(bamfile):
+    candidates = [bamfile + '.bai', bamfile + '.csi', os.path.splitext(bamfile)[0] + '.bai']
+    return any(os.path.isfile(c) for c in candidates)
+
 def generate_input_table(bedfile, bamfiles, samplenames=None):
     """Reads input files into dictionaries then prints everything in the table
     format required for running CONCOCT."""
 
-    p = subprocess.Popen(["samtools", "bedcov", bedfile] + bamfiles, stdout=subprocess.PIPE)
+    returncode, out = run_samtools(["bedcov", bedfile] + bamfiles)
 
-    out, err = p.communicate()
-    if p.returncode != 0:
-        sys.stderr.write(out)
-        sys.stderr.write(err)
-        raise Exception('Error with running samtools bedcov')
+    if returncode != 0 or not out.strip():
+        for bamfile in bamfiles:
+            if not has_index(bamfile):
+                sys.stderr.write(("No index was found for '{0}'. The bamfiles need to be sorted and indexed, "
+                    "the index is created with 'samtools index {0}' and is expected to "
+                    "be named '{0}.bai'.\n").format(bamfile))
+        exit_with_error("Running 'samtools bedcov' failed or gave no output, see any samtools error message above.")
     else:
         # Header
         if samplenames == None:
@@ -52,12 +107,7 @@ def generate_input_table(bedfile, bamfiles, samplenames=None):
         header=["cov_mean_sample_{}".format(n) for n in col_names]
 
         # Content
-        if sys.version_info[0] < 3:
-            from StringIO import StringIO
-        else:
-            from io import StringIO
-
-        fh = StringIO(out.decode('utf-8'))
+        fh = StringIO(out)
         df = pd.read_csv(fh, header=None, sep='\t')
         avg_coverage_depth = df[df.columns[4:]].divide((df[2]-df[1]), axis=0)
         avg_coverage_depth.index = df[3]
@@ -77,7 +127,7 @@ if __name__ == "__main__":
 
     # Get sample names
     if args.samplenames != None:
-        samplenames = [ s[:-1] for s in open(args.samplenames).readlines() ]
+        samplenames = [ s.strip() for s in open(args.samplenames).readlines() if s.strip() ]
         if len(samplenames) != len(args.bamfiles):
             raise Exception("Nr of names ({0}) in samplenames should be equal to nr of given "
                             "bamfiles ({1})".format(len(samplenames), len(args.bamfiles)))
@@ -88,4 +138,5 @@ if __name__ == "__main__":
     # http://newbebweb.blogspot.pt/2012/02/python-head-ioerror-errno-32-broken.html
     signal(SIGPIPE,SIG_DFL)
     check_bed_file_for_errors(args.bedfile)
+    check_bam_files_for_errors(args.bedfile, args.bamfiles)
     generate_input_table(args.bedfile, args.bamfiles, samplenames=samplenames)
