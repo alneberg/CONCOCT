@@ -19,7 +19,8 @@ def cut_up_fasta(fastfiles, chunk_size, overlap, merge_last, bedoutfile):
                 for split_seq in chunks(record.seq, chunk_size, overlap, merge_last):
                     print(">{}.concoct_part_{}\n{}".format(record.id, i, split_seq))
                     if bedoutfile:
-                        print("{0}\t{2}\t{3}\t{0}.concoct_part_{1}".format(record.id, i, chunk_size*i, chunk_size*i+len(split_seq)),
+                        start = (chunk_size - overlap) * i
+                        print("{0}\t{2}\t{3}\t{0}.concoct_part_{1}".format(record.id, i, start, start+len(split_seq)),
                               file=bedoutfile_fh)
                     i = i + 1
             else:

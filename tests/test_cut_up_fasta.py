@@ -111,5 +111,42 @@ class TestCMD(unittest.TestCase):
                              nr_parts_per_original[rec.id])
 
 
+    def check_bedfile(self, chunk_size, overlap_size, merge_last):
+        """Each line in the bedfile should point out the region of the
+        original contig that the cut up contig consists of."""
+        contigs_file = os.path.join(data_path, 'composition.fa')
+        bedfile = os.path.join(tmp_dir_path, 'contigs_cutup.bed')
+        output_file = os.path.join(tmp_dir_path, 'contigs_cutup.fa')
+
+        self.run_command(
+                contigs_file=contigs_file,
+                chunk_size=chunk_size,
+                overlap_size=overlap_size,
+                merge_last=merge_last,
+                bedfile=bedfile,
+                output_file=output_file)
+
+        with open(contigs_file) as fhandle:
+            original = dict((rec.id, str(rec.seq)) for rec in SeqIO.parse(fhandle, "fasta"))
+        with open(output_file) as fhandle:
+            cutup = dict((rec.id, str(rec.seq)) for rec in SeqIO.parse(fhandle, "fasta"))
+
+        nr_cut_contigs = 0
+        with open(bedfile) as fhandle:
+            for line in fhandle:
+                original_id, start, end, cutup_id = line.strip().split('\t')
+                self.assertEqual(original[original_id][int(start):int(end)], cutup[cutup_id])
+                if not cutup_id.endswith('.concoct_part_0'):
+                    nr_cut_contigs += 1
+        self.assertEqual(self.file_len(bedfile), len(cutup))
+        self.assertTrue(nr_cut_contigs > 0)
+
     def test_with_bedfile(self):
-        bedfile = os.path.join(tmp_dir_path, 'contigs_cutup.bed'),
+        self.check_bedfile(chunk_size=200, overlap_size=0, merge_last=True)
+
+    def test_with_bedfile_no_merge_last(self):
+        self.check_bedfile(chunk_size=200, overlap_size=0, merge_last=False)
+
+    def test_with_bedfile_and_overlap(self):
+        self.check_bedfile(chunk_size=200, overlap_size=50, merge_last=True)
+        self.check_bedfile(chunk_size=200, overlap_size=50, merge_last=False)

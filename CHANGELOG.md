@@ -19,6 +19,13 @@ When changing something in the develop branch, it should be added here.
  - `nose` is no longer an install requirement
  - `extract_scg_bins.py` works with pandas >= 1.0
  - The Dockerfile builds again
+ - [#300](https://github.com/BinPro/CONCOCT/issues/300) - `concoct_coverage_table.py` no longer hides the samtools error behind `TypeError: write() argument must be str, not bytes`, and points out missing bam indices
+ - [#307](https://github.com/BinPro/CONCOCT/issues/307) - `concoct_coverage_table.py` exits with an explanation when contigs in the bedfile are missing from a bamfile
+ - `concoct_coverage_table.py` refuses bamfiles with differing contig order in their headers, for which `samtools bedcov` silently reports the coverage of the wrong contigs
+ - `concoct_coverage_table.py` handles a samplenames file without a trailing newline
+ - [#150](https://github.com/BinPro/CONCOCT/issues/150), [#281](https://github.com/BinPro/CONCOCT/issues/281) - Contig ids consisting of digits only are now handled by `concoct` and `extract_fasta_bins.py`
+ - [#312](https://github.com/BinPro/CONCOCT/issues/312) - `extract_fasta_bins.py` explains what is wrong when the contigs of the cluster file are not found in the fasta file
+ - `cut_up_fasta.py` wrote the wrong coordinates to the bedfile when a non zero overlap was used
 
 ## [v1.1.0] 2019-08-02
 
