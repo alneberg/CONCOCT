@@ -10,9 +10,13 @@ import argparse
 import pandas as p
 
 from sklearn.decomposition import PCA
+from threadpoolctl import threadpool_limits
 
 def main(args):
     clusters = p.read_csv(args.cluster_file, header=None, index_col=0)
+    # The header line written by concoct is optional
+    if clusters.index[0] == 'contig_id':
+        clusters = clusters.iloc[1:].astype(int)
     
     original_data = p.read_csv(args.original_data, header=0, index_col=0)
     
@@ -40,12 +44,18 @@ def main(args):
             
             index_k = np.where(select[:,0])[0]
             
+            # Nothing to split up and the PCA needs at least two contigs
+            if slice_k.shape[0] < 2:
+                continue
+            
             pca_object = PCA(n_components=0.90).fit(slice_k)
             transform_k = pca_object.transform(slice_k)
             
             NK = med_scgs[k]*args.expansion_factor
             print("Run CONCOCT for " + str(k) + "with " + str(NK) + "clusters" + " using " + str(args.threads) + "threads")
-            assigns = vbgmm.fit(np.copy(transform_k,order='C'), int(NK), args.seed, args.threads)
+            # See comment in the concoct script on why BLAS is limited to one thread
+            with threadpool_limits(limits=1, user_api='blas'):
+                assigns = vbgmm.fit(np.copy(transform_k,order='C'), int(NK), args.seed, args.threads, args.iterations)
             kK = np.max(assigns) + 1
             
             
@@ -75,6 +85,10 @@ if __name__ == "__main__":
 
     parser.add_argument('-t','--threads',default=1, type=int,
                         help=("number of threads to use defaults to one"))
+
+    parser.add_argument('-i','--iterations',default=500, type=int,
+                        help=("Specify maximum number of iterations for the VBGMM. "
+                              "Default value is 500"))
 
     args = parser.parse_args()
 
