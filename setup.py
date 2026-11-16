@@ -38,7 +38,7 @@ setup(name='concoct',
                                 libraries =['gsl', 'gslcblas', 'gomp'], include_dirs=include_dirs_for_concoct,
                                 extra_compile_args = extra_compile_args)
                     ], language_level=3),
-      python_requires='>=3.9',
+      python_requires='>=3.10',
       install_requires=['numpy>=1.21',
                         'scipy>=1.7',
                         'pandas>=1.3',

@@ -7,7 +7,7 @@ When changing something in the develop branch, it should be added here.
 
 ### `Changed`
 
- - Python 2 is no longer supported, Python 3.9 or later is required
+ - Python 2 is no longer supported, Python 3.10 or later is required
  - The tests are now run with pytest instead of the unmaintained nose
  - Continuous integration is moved from Travis CI to GitHub Actions
  - The build requirements (cython and numpy) are declared in `pyproject.toml` so that `pip install .` works in a clean environment

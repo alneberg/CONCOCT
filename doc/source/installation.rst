@@ -27,7 +27,7 @@ Manual Installation
 
 The conda installation should be enough for most users.
 However, if you want to modify the source code, a manual installation might be needed.
-CONCOCT requires Python 3.9 or later, a C compiler with OpenMP support and the `GNU Scientific Library <https://www.gnu.org/software/gsl/>`_.
+CONCOCT requires Python 3.10 or later, a C compiler with OpenMP support and the `GNU Scientific Library <https://www.gnu.org/software/gsl/>`_.
 On a Debian or Ubuntu system, a manual installation can be done using:
 
 ::
