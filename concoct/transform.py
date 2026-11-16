@@ -1,7 +1,11 @@
 from sklearn.decomposition import PCA
+import numpy as np
 import pandas as p
 
 def perform_pca(d, nc, seed):
+    # The composition columns are named by integers and the coverage columns
+    # by strings, a mix scikit-learn >= 1.2 refuses as feature names.
+    d = np.asarray(d)
     pca_object = PCA(n_components=nc, random_state=seed).fit(d)
     return pca_object.transform(d), pca_object
 
