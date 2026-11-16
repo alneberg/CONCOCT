@@ -1,19 +1,12 @@
 #!/usr/bin/env python
-from setuptools import setup, find_packages
-import sys, os
 from sys import platform
-from distutils.core import Extension
+from setuptools import setup, find_packages, Extension
+from Cython.Build import cythonize
 import numpy as np
-
-try:
-    from Cython.Distutils import build_ext
-except ImportError:
-    print("You need to have Cython installed on your system to run setup.py. Sorry!")
-    sys.exit()
 
 version = '1.1.0'
 
-include_dirs_for_concoct = [np.get_include(), '/opt/local/include/']     
+include_dirs_for_concoct = [np.get_include(), '/opt/local/include/']
 
 extra_compile_args = ['-O3','-std=c99']
 # System clang on MacOS does not recognize the -fopenmp argument
@@ -40,20 +33,16 @@ setup(name='concoct',
                "scripts/merge_cutup_clustering.py", "scripts/extract_fasta_bins.py"],
       include_package_data=True,
       zip_safe=False,
-      cmdclass = {'build_ext': build_ext},
-      ext_modules = [
+      ext_modules = cythonize([
                     Extension("vbgmm", sources=["./c-concoct/vbgmm.pyx", "./c-concoct/c_vbgmm_fit.c"],
                                 libraries =['gsl', 'gslcblas', 'gomp'], include_dirs=include_dirs_for_concoct,
                                 extra_compile_args = extra_compile_args)
-                    ],
-      install_requires=['cython>=0.19.1',
-                        'numpy>=1.7.1',
-                        'scipy>=0.12.0',
-                        'pandas>=0.11.0',
-                        'biopython>=1.62b',
-                        'scikit-learn>=0.13.1',
-                        'nose'],
-      entry_points="""
-      # -*- Entry points: -*-
-      """,
+                    ], language_level=3),
+      python_requires='>=3.9',
+      install_requires=['numpy>=1.21',
+                        'scipy>=1.7',
+                        'pandas>=1.3',
+                        'biopython>=1.79',
+                        'scikit-learn>=1.0'],
+      extras_require={'test': ['pytest', 'bcbio-gff>=0.6.6']},
       )
