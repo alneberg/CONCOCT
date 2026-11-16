@@ -11,6 +11,13 @@ When changing something in the develop branch, it should be added here.
  - The tests are now run with pytest instead of the unmaintained nose
  - Continuous integration is moved from Travis CI to GitHub Actions
  - The build requirements (cython and numpy) are declared in `pyproject.toml` so that `pip install .` works in a clean environment
+ - [#118](https://github.com/BinPro/CONCOCT/issues/118) - `concoct` exits with an error message when no composition file is given, the coverage file is optional
+ - `concoct` no longer prints the debug line with the number of contigs and threads to stdout
+
+### `Added`
+
+ - [#284](https://github.com/BinPro/CONCOCT/pull/284) - The `--iterations` argument for `concoct_refine`
+ - [#318](https://github.com/BinPro/CONCOCT/issues/318) - Documentation of the output files
 
 ### `Fixed`
 
@@ -26,6 +33,11 @@ When changing something in the develop branch, it should be added here.
  - [#150](https://github.com/BinPro/CONCOCT/issues/150), [#281](https://github.com/BinPro/CONCOCT/issues/281) - Contig ids consisting of digits only are now handled by `concoct` and `extract_fasta_bins.py`
  - [#312](https://github.com/BinPro/CONCOCT/issues/312) - `extract_fasta_bins.py` explains what is wrong when the contigs of the cluster file are not found in the fasta file
  - `cut_up_fasta.py` wrote the wrong coordinates to the bedfile when a non zero overlap was used
+ - [#292](https://github.com/BinPro/CONCOCT/issues/292), [#330](https://github.com/BinPro/CONCOCT/issues/330) - `concoct` used more cores than given with `--threads`
+ - [#316](https://github.com/BinPro/CONCOCT/issues/316), [#329](https://github.com/BinPro/CONCOCT/issues/329) - Endless `OpenBLAS Warning : Detect OpenMP Loop and this application may hang`, which also made the clustering many times slower
+ - [#324](https://github.com/BinPro/CONCOCT/issues/324) - `concoct_refine` failed with `fit() takes exactly 5 positional arguments (4 given)`
+ - `concoct_refine` accepts the cluster file as written by `concoct`, with a header line
+ - `concoct` failed with pandas >= 3 when the coverage file only contained integer values
 
 ## [v1.1.0] 2019-08-02
 
