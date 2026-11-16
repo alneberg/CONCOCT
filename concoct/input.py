@@ -83,6 +83,8 @@ def load_coverage(cov_file, contig_lengths, no_cov_normalization, add_total_cove
     # file also when they consist of digits only.
     id_column = p.read_table(cov_file, header=0, nrows=0).columns[0]
     cov = p.read_table(cov_file, header=0, index_col=0, dtype={id_column: str})
+    # Columns with only integer values can not hold the normalised values
+    cov = cov.astype(float)
 
     cov = cov[cov.index.isin(contig_lengths.index)]
 

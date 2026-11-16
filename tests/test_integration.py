@@ -335,6 +335,31 @@ class TestCMD(unittest.TestCase):
         self.assertEqual(list(observed.contig_id), [new_ids[c] for c in expected.contig_id])
         self.assertEqual(list(observed.cluster_id), list(expected.cluster_id))
 
+    def test_integer_coverage(self):
+        """A coverage table with integer values only should work as well"""
+        cov_file = os.path.join(tmp_dir_path, 'integer_coverage')
+        cov = p.read_csv(os.path.join(test_dir_path, 'test_data', 'coverage'), sep='\t', index_col=0)
+        (cov * 100).astype(int).to_csv(cov_file, sep='\t')
+
+        self.run_command(cov_file='../tmp_output/integer_coverage')
+        self.assertEqual(self.c, 0,
+                     msg = "Command exited with nonzero status")
+        self.assertTrue(isfile(tmp_basename_dir+'/clustering_gt1000.csv'))
+
+    def test_composition_only(self):
+        call_string = "concoct --composition_file test_data/composition.fa --basename tmp_output/1 -c 10 2> /dev/null"
+        output = subprocess.check_output(call_string, shell=True)
+        self.assertEqual(output, b"", msg="Nothing should be written to stdout")
+        self.assertEqual(self.file_len(tmp_basename_dir+'/clustering_gt1000.csv'),
+                         self.file_len(tmp_basename_dir+'/original_data_gt1000.csv'))
+
+    def test_composition_file_required(self):
+        call = ["concoct", "--coverage_file", "test_data/coverage", "--basename", "tmp_output/1"]
+        proc = subprocess.Popen(call, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        _, err = proc.communicate()
+        self.assertEqual(proc.returncode, 2)
+        self.assertTrue(b"No composition file supplied" in err, msg=err)
+
     def test_one_contig_threshold(self):
         """Make sure we don't execute clustering of 0 or 1 contig"""
         # Make sure the error code is not set before running command

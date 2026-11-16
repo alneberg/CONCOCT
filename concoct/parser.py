@@ -25,12 +25,12 @@ def arguments():
 
     #Input files
     parser.add_argument('--coverage_file',
-        help=("specify the coverage file, containing a table where each row "
+        help=("specify the coverage file (optional), containing a table where each row "
               "correspond to a contig, and each column correspond to a sample. "
               "The values are the average coverage for this contig in that sample. "
               "All values are separated with tabs."))
     parser.add_argument('--composition_file',
-        help=("specify the composition file, containing sequences in fasta format. "
+        help=("specify the composition file (required), containing sequences in fasta format. "
               "It is named the composition file since it is used to calculate the "
               "kmer composition (the genomic signature) of each contig."))
 
@@ -94,9 +94,12 @@ def arguments():
     if args.debug:
         print(args, file=sys.stderr)
         sys.exit(0)
-    # This can be changed to an or case when input of either case is supported individually
-    if not (args.coverage_file or args.composition_file):
-        parser.error("No input data supplied, add file(s) using --coverage_file <cov_file> and/or "
-                     "--composition_file <comp_file>")
+    # The coverage file is optional, but the contig lengths used for the
+    # length threshold are always taken from the composition file.
+    if not args.composition_file:
+        parser.error("No composition file supplied, add it using --composition_file <comp_file>. "
+                     "Optionally add coverage data using --coverage_file <cov_file>")
+    if args.threads < 1:
+        parser.error("The number of threads needs to be at least 1")
 
     return args
