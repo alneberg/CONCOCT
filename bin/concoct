@@ -5,6 +5,7 @@ import sys
 import logging
 import vbgmm
 import numpy as np
+from threadpoolctl import threadpool_limits
 
 
 from concoct.output import Output
@@ -34,11 +35,13 @@ def main(args):
         args.pca_components = joined.shape[1]
 
     #PCA on the contigs that have kmer count greater than length_threshold
-    transform_filter, pca = perform_pca(
-        joined,
-        args.pca_components,
-        args.seed
-        )
+    # The BLAS library used by numpy would otherwise use all available cores
+    with threadpool_limits(limits=args.threads, user_api='blas'):
+        transform_filter, pca = perform_pca(
+            joined,
+            args.pca_components,
+            args.seed
+            )
 
     logging.info('Performed PCA, resulted in %s dimensions' % transform_filter.shape[1])
 
@@ -66,7 +69,11 @@ def main(args):
     N_contigs = transform_filter.shape[0]
     assign = np.zeros(N_contigs, dtype=np.int32)
 
-    assign = vbgmm.fit(np.copy(transform_filter,order='C'), int(args.clusters), int(args.seed), int(args.threads),int(args.iterations))
+    # vbgmm runs its own OpenMP threads. A multithreaded BLAS called from
+    # within these would use more cores than asked for and makes OpenBLAS
+    # flood stderr with "Detect OpenMP Loop" warnings.
+    with threadpool_limits(limits=1, user_api='blas'):
+        assign = vbgmm.fit(np.copy(transform_filter,order='C'), int(args.clusters), int(args.seed), int(args.threads),int(args.iterations))
 
 
     Output.write_assign(

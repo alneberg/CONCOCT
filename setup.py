@@ -43,6 +43,7 @@ setup(name='concoct',
                         'scipy>=1.7',
                         'pandas>=1.3',
                         'biopython>=1.79',
-                        'scikit-learn>=1.0'],
+                        'scikit-learn>=1.0',
+                        'threadpoolctl>=2.0'],
       extras_require={'test': ['pytest', 'bcbio-gff>=0.6.6']},
       )
